@@ -24,16 +24,31 @@ dependencies {
     implementation project(":cameracoroutines")
 
     // Android Support Libraries
+    implementation "com.android.support:support-annotations:$supportLibs_version"
     implementation "com.android.support:appcompat-v7:$supportLibs_version"
     implementation "com.android.support:design:$supportLibs_version"
     implementation "com.android.support:cardview-v7:$supportLibs_version"
+    implementation "com.android.support:support-core-utils:$supportLibs_version"
+    implementation "com.android.support:support-fragment:$supportLibs_version"
+
+    // Android Architecture Components
+    implementation "android.arch.lifecycle:extensions:$arch_lifecycle_version"
+
+    // ConstraintLayout
+    implementation "com.android.support.constraint:constraint-layout:$constraintLayout_version"
 
     implementation "com.google.firebase:firebase-core:$playServices_version"
     implementation "com.google.firebase:firebase-crash:$playServices_version"
 
     // Splitties
+    implementation "xyz.louiscad.splitties:splitties-appctx:$splitties_version"
+    implementation "xyz.louiscad.splitties:splitties-concurrency:$splitties_version"
+    implementation "xyz.louiscad.splitties:splitties-preferences:$splitties_version"
     implementation "xyz.louiscad.splitties:splitties-selectableviews:$splitties_version"
     implementation "xyz.louiscad.splitties:splitties-typesaferecyclerview:$splitties_version"
+
+    // Log utilities
+    implementation "com.jakewharton.timber:timber:$timber_version"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
