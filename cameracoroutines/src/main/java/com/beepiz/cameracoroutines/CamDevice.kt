@@ -2,12 +2,10 @@ package com.beepiz.cameracoroutines
 
 import android.Manifest
 import android.hardware.camera2.CameraDevice
-import android.hardware.camera2.CameraDevice.*
-import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.CameraDevice.StateCallback
 import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.view.Surface
-import com.beepiz.cameracoroutines.CamDevice.Template.*
 import com.beepiz.cameracoroutines.extensions.cameraManager
 import kotlinx.coroutines.experimental.channels.ConflatedChannel
 import timber.log.Timber
@@ -72,13 +70,12 @@ constructor(private val camId: String, private val handler: Handler? = null) {
         camManager.openCamera(camId, camStateCallback, handler)
         val state = camState.receive()
         when (state) {
-            is State.Opened -> return
+            State.Opened -> return
             is State.Error -> TODO()
             State.Disconnected -> TODO()
             State.Closed -> TODO()
         }
         //TODO: See if CameraDevice.StateCallback is automatically unregistered after error or disconnection.
-        TODO()
     }
 
     fun createCaptureSession(outputs: List<Surface>) = CamCaptureSession(cam, handler).also {
@@ -86,7 +83,7 @@ constructor(private val camId: String, private val handler: Handler? = null) {
     }
 
     fun testSessionState(sessionState: CamCaptureSession.State) {
-        val a = when(sessionState) {
+        val stateDependentValue = when(sessionState) {
             CamCaptureSession.State.Configured -> TODO()
             CamCaptureSession.State.Configured.InputQueueEmpty -> TODO()
             CamCaptureSession.State.Configured.InputQueueEmpty.Ready -> TODO()
@@ -94,16 +91,5 @@ constructor(private val camId: String, private val handler: Handler? = null) {
             CamCaptureSession.State.Closed.ConfigureFailed -> TODO()
             CamCaptureSession.State.Closed -> TODO()
         }
-    }
-
-    fun createCaptureRequest(template: Template): CaptureRequest.Builder {
-        return cam.createCaptureRequest(when (template) {
-            PREVIEW -> TEMPLATE_PREVIEW
-            STILL_CAPTURE -> TEMPLATE_STILL_CAPTURE
-            RECORD -> TEMPLATE_RECORD
-            VIDEO_SNAPSHOT -> TEMPLATE_VIDEO_SNAPSHOT
-            ZERO_SHUTTER_LAG -> TEMPLATE_ZERO_SHUTTER_LAG
-            MANUAL -> TEMPLATE_MANUAL
-        })
     }
 }
