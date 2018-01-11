@@ -1,61 +1,109 @@
 package com.beepiz.cameracoroutines
 
 import android.Manifest
-import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraDevice.*
+import android.hardware.camera2.CaptureRequest
 import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.view.Surface
+import com.beepiz.cameracoroutines.CamDevice.Template.*
 import com.beepiz.cameracoroutines.extensions.cameraManager
+import kotlinx.coroutines.experimental.channels.ConflatedChannel
 import timber.log.Timber
-import kotlin.coroutines.experimental.suspendCoroutine
 
 class CamDevice
 @RequiresPermission(Manifest.permission.CAMERA)
-constructor(camId: String, handler: Handler? = null) {
+constructor(private val camId: String, private val handler: Handler? = null) {
+
+    sealed class State {
+        object Opened : State()
+        class Error(val errorCode: Int) : State() {
+            fun errorString(): String = when (errorCode) {
+                StateCallback.ERROR_CAMERA_IN_USE -> "ERROR_CAMERA_IN_USE"
+                StateCallback.ERROR_MAX_CAMERAS_IN_USE -> "ERROR_MAX_CAMERAS_IN_USE"
+                StateCallback.ERROR_CAMERA_DISABLED -> "ERROR_CAMERA_DISABLED"
+                StateCallback.ERROR_CAMERA_DEVICE -> "ERROR_CAMERA_DEVICE"
+                StateCallback.ERROR_CAMERA_SERVICE -> "ERROR_CAMERA_SERVICE"
+                else -> "$errorCode"
+            }
+        }
+
+        object Disconnected : State()
+        object Closed : State()
+    }
+
+    enum class Template {
+        PREVIEW, STILL_CAPTURE, RECORD, VIDEO_SNAPSHOT, ZERO_SHUTTER_LAG, MANUAL
+    }
 
     private val camManager = cameraManager
+
+    private val camState = ConflatedChannel<State>()
+    private lateinit var cam: CameraDevice
+
     private val camStateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
             Timber.v("onOpened($camera)")
-            return
-            camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
-            TODO()
+            cam = camera
+            camState.offer(State.Opened)
         }
 
         override fun onDisconnected(camera: CameraDevice) {
             Timber.v("onDisconnected($camera)")
+            camState.offer(State.Disconnected)
             camera.close()
-            return
-            TODO()
         }
 
         override fun onError(camera: CameraDevice, error: Int) {
             Timber.v("onError($camera, $error)")
+            camState.offer(State.Error(error))
             camera.close()
-            return
-            TODO()
         }
 
         override fun onClosed(camera: CameraDevice) {
             Timber.v("onClosed($camera)")
+            camState.offer(State.Closed)
         }
     }
 
-    init {
+    @RequiresPermission(Manifest.permission.CAMERA)
+    suspend fun open() {
         camManager.openCamera(camId, camStateCallback, handler)
-    }
-}
-
-private suspend fun CameraDevice.createCaptureSession(outputs: List<Surface>, handler: Handler? = null) = suspendCoroutine<CameraCaptureSession> {
-    val sessionStateCallback = object : CameraCaptureSession.StateCallback() {
-        override fun onConfigured(session: CameraCaptureSession) {
-            it.resume(session)
+        val state = camState.receive()
+        when (state) {
+            is State.Opened -> return
+            is State.Error -> TODO()
+            State.Disconnected -> TODO()
+            State.Closed -> TODO()
         }
+        //TODO: See if CameraDevice.StateCallback is automatically unregistered after error or disconnection.
+        TODO()
+    }
 
-        override fun onConfigureFailed(session: CameraCaptureSession?) {
-            it.resumeWithException(Error())
+    fun createCaptureSession(outputs: List<Surface>) = CamCaptureSession(cam, handler).also {
+        cam.createCaptureSession(outputs, it.sessionStateCallback, handler)
+    }
+
+    fun testSessionState(sessionState: CamCaptureSession.State) {
+        val a = when(sessionState) {
+            CamCaptureSession.State.Configured -> TODO()
+            CamCaptureSession.State.Configured.InputQueueEmpty -> TODO()
+            CamCaptureSession.State.Configured.InputQueueEmpty.Ready -> TODO()
+            CamCaptureSession.State.Configured.Active -> TODO()
+            CamCaptureSession.State.Closed.ConfigureFailed -> TODO()
+            CamCaptureSession.State.Closed -> TODO()
         }
     }
-    createCaptureSession(outputs, sessionStateCallback, handler)
+
+    fun createCaptureRequest(template: Template): CaptureRequest.Builder {
+        return cam.createCaptureRequest(when (template) {
+            PREVIEW -> TEMPLATE_PREVIEW
+            STILL_CAPTURE -> TEMPLATE_STILL_CAPTURE
+            RECORD -> TEMPLATE_RECORD
+            VIDEO_SNAPSHOT -> TEMPLATE_VIDEO_SNAPSHOT
+            ZERO_SHUTTER_LAG -> TEMPLATE_ZERO_SHUTTER_LAG
+            MANUAL -> TEMPLATE_MANUAL
+        })
+    }
 }

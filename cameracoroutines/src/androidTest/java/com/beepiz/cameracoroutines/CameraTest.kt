@@ -32,6 +32,6 @@ private suspend fun CameraManager.openCam(camId: String) = suspendCoroutine<Came
         }
     }
     openCamera(camId, camCallback, null)
-    //TODO: See if CameraDevice.StateCallback is automatically unregistered after error or disconnection.
+
     //TODO: Write a camera wrapper in GattConnection style
 }
