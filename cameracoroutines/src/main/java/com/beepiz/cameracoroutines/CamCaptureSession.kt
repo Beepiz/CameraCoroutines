@@ -62,7 +62,13 @@ class CamCaptureSession internal constructor(
         override fun onClosed(session: CCS) = stateCallback(session, State.Closed)
     }
 
-    fun createCaptureRequest(template: CamDevice.Template): CaptureRequest.Builder {
+    inline fun createCaptureRequest(
+            template: CamDevice.Template,
+            block: (CaptureRequest.Builder) -> Unit
+    ): CaptureRequest = createCaptureRequestBuilder(template).also(block).build()
+
+    @PublishedApi
+    internal fun createCaptureRequestBuilder(template: CamDevice.Template): CaptureRequest.Builder {
         return cameraDevice.createCaptureRequest(when (template) {
             PREVIEW -> TEMPLATE_PREVIEW
             STILL_CAPTURE -> TEMPLATE_STILL_CAPTURE
