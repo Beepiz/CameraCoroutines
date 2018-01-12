@@ -5,7 +5,7 @@ apply plugin: 'kotlin-kapt'
 android {
     compileSdkVersion projectSdk_version
     defaultConfig {
-        applicationId "com.beepiz.ap"
+        applicationId "com.beepiz.cameracoroutines.sample"
         minSdkVersion 23
         targetSdkVersion projectSdk_target_version
         versionCode 1
