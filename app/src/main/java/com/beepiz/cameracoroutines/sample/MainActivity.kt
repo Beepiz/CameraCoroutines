@@ -28,9 +28,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             add(::button, lp) {
+                text = "Request microphone permission"
+                onClick {
+                    requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 1)
+                }
+            }
+            add(::button, lp) {
                 text = "Open Cam test"
                 onClick {
                     startActivity(Intent(this@MainActivity, CamTestActivity::class.java))
+                }
+            }
+            add(::button, lp) {
+                text = "Open Double Cam test"
+                onClick {
+                    startActivity(Intent(this@MainActivity, DoubleCamTestActivity::class.java))
                 }
             }
         }

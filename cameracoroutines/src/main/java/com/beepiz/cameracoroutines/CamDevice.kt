@@ -81,15 +81,4 @@ constructor(private val camId: String, private val handler: Handler? = null) {
     fun createCaptureSession(outputs: List<Surface>) = CamCaptureSession(cam, handler).also {
         cam.createCaptureSession(outputs, it.sessionStateCallback, handler)
     }
-
-    fun testSessionState(sessionState: CamCaptureSession.State) {
-        val stateDependentValue = when(sessionState) {
-            CamCaptureSession.State.Configured -> TODO()
-            CamCaptureSession.State.Configured.InputQueueEmpty -> TODO()
-            CamCaptureSession.State.Configured.InputQueueEmpty.Ready -> TODO()
-            CamCaptureSession.State.Configured.Active -> TODO()
-            CamCaptureSession.State.Closed.ConfigureFailed -> TODO()
-            CamCaptureSession.State.Closed -> TODO()
-        }
-    }
 }
