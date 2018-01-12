@@ -34,6 +34,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             add(::button, lp) {
+                text = "Request storage permission"
+                onClick {
+                    requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
+                }
+            }
+            add(::button, lp) {
                 text = "Open Cam test"
                 onClick {
                     startActivity(Intent(this@MainActivity, CamTestActivity::class.java))

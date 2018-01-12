@@ -46,6 +46,8 @@ dependencies {
     implementation "xyz.louiscad.splitties:splitties-preferences:$splitties_version"
     implementation "xyz.louiscad.splitties:splitties-selectableviews:$splitties_version"
     implementation "xyz.louiscad.splitties:splitties-typesaferecyclerview:$splitties_version"
+    debugImplementation "xyz.louiscad.splitties:splitties-stetho-init:$splitties_version"
+    debugImplementation 'com.facebook.stetho:stetho:1.5.0'
 
     // Log utilities
     implementation "com.jakewharton.timber:timber:$timber_version"
