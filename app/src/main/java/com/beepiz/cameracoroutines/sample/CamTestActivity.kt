@@ -96,7 +96,7 @@ class CamTestActivity : AppCompatActivity() {
                     }
                 }
             }
-            val captureRequest = session.createCaptureRequest(CamDevice.Template.PREVIEW) {
+            val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
                 surfaces.forEach(it::addTarget)
                 it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
             }

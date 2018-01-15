@@ -39,8 +39,11 @@ object Recorder {
     }
 
     fun chooseVideoSize(choices: Array<Size>): Size {
-        return choices.firstOrNull {
-            it.height <= 720 && (it.width == (it.height * (16 / 9)))
+        return choices.firstOrNull { (w, h) ->
+            minOf(w, h) <= 480 // && (it.width == (it.height * (16 / 9)))
         } ?: choices.last()
     }
+
+    private operator fun Size.component1() = width
+    private operator fun Size.component2() = height
 }
