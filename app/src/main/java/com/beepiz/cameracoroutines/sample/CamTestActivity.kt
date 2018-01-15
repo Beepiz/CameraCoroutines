@@ -11,9 +11,11 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.support.annotation.RequiresPermission
 import android.support.v7.app.AppCompatActivity
+import android.view.SurfaceHolder
 import com.beepiz.cameracoroutines.CamCaptureSession
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.extensions.cameraManager
+import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.viewdsl.lazy
 import com.beepiz.cameracoroutines.sample.viewdsl.setContentView
 import kotlinx.coroutines.experimental.CancellationException
@@ -67,9 +69,12 @@ class CamTestActivity : AppCompatActivity() {
                 val characteristics = camManager.getCameraCharacteristics(it)
                 characteristics[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_BACK
             } ?: throw NoSuchElementException("No back camera found")
-            /*val camCharacteristics = camManager.getCameraCharacteristics(backCamId)
+            val camCharacteristics = camManager.getCameraCharacteristics(backCamId)
             val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
-            val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]*/
+            val outputSizes = configMap.outputSizes<MediaRecorder>()
+            val previewSizes = configMap.outputSizes<SurfaceHolder>()
+            val videoSize = Recorder.chooseVideoSize(outputSizes)
+            val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]
             val cam = CamDevice(backCamId, camHandler)
             cam.open()
             ui.surfaceHolderState.createdChannel.consume {
@@ -77,17 +82,11 @@ class CamTestActivity : AppCompatActivity() {
             }
             val camDispatcher = camHandler.asCoroutineDispatcher()
             async(camDispatcher) {
-                recorder.let {
-                    it.setAudioSource(MediaRecorder.AudioSource.DEFAULT)
-                    it.setVideoSource(MediaRecorder.VideoSource.SURFACE)
-                    it.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                    it.setOutputFile("${getExternalFilesDir(null).absolutePath}/CamCoroutinesTest.mp4")
-                    it.setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-                    it.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                    it.prepare()
+                with(Recorder) {
+                    recorder.setupAndPrepare(videoSize)
                 }
             }.await()
-            val surfaces = listOf(ui.previewSurface, recorder.surface)
+            val surfaces = listOf(recorder.surface)
             val session = cam.createCaptureSession(surfaces)
             session.stateChannel.consume {
                 loop@ for (state in this) {
@@ -108,6 +107,7 @@ class CamTestActivity : AppCompatActivity() {
             finish()
         } catch (e: Exception) {
             Timber.e(e)
+            finish()
         } finally {
             recorder.release()
         }
