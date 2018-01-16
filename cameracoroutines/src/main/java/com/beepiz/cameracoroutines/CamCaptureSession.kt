@@ -61,7 +61,10 @@ class CamCaptureSession internal constructor(
         }
 
         override fun onConfigureFailed(session: CCS) = stateCallback(session, State.Closed.ConfigureFailed)
-        override fun onClosed(session: CCS) = stateCallback(session, State.Closed)
+        override fun onClosed(session: CCS) {
+            stateCallback(session, State.Closed)
+            stateChannel.close()
+        }
     }
 
     /**
@@ -118,6 +121,5 @@ class CamCaptureSession internal constructor(
     override fun close() {
         captureSession?.close()
         preparedSurfaceChannel.close()
-        stateChannel.close()
     }
 }
