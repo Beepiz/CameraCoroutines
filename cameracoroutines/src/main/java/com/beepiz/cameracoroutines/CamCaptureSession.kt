@@ -11,8 +11,10 @@ import android.os.Handler
 import android.support.annotation.RequiresApi
 import android.view.Surface
 import com.beepiz.cameracoroutines.CamDevice.Template.*
+import com.beepiz.cameracoroutines.exceptions.CamCaptureSessionStateException
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.ConflatedBroadcastChannel
+import kotlinx.coroutines.experimental.channels.consume
 
 private typealias CCS = CameraCaptureSession
 
@@ -60,6 +62,22 @@ class CamCaptureSession internal constructor(
 
         override fun onConfigureFailed(session: CCS) = stateCallback(session, State.Closed.ConfigureFailed)
         override fun onClosed(session: CCS) = stateCallback(session, State.Closed)
+    }
+
+    /**
+     * Resumes on any [CamCaptureSession.State.Configured] state, and throws a
+     * [CamCaptureSessionStateException] if a [CamCaptureSession.State.Closed] is received instead.
+     */
+    @Throws(CamCaptureSessionStateException::class)
+    suspend fun awaitConfiguredState() {
+        stateChannel.consume {
+            loop@ for (state in this) {
+                when (state) {
+                    is CamCaptureSession.State.Configured -> break@loop
+                    is CamCaptureSession.State.Closed -> throw CamCaptureSessionStateException(state)
+                }
+            }
+        }
     }
 
     inline fun createCaptureRequest(
