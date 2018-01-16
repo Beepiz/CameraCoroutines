@@ -2,6 +2,7 @@ package com.beepiz.cameracoroutines.sample
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
@@ -14,11 +15,12 @@ import android.support.v7.app.AppCompatActivity
 import android.view.SurfaceHolder
 import com.beepiz.cameracoroutines.CamCaptureSession
 import com.beepiz.cameracoroutines.CamDevice
+import com.beepiz.cameracoroutines.exceptions.CamCaptureSessionStateException
+import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.extensions.cameraManager
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.viewdsl.lazy
 import com.beepiz.cameracoroutines.sample.viewdsl.setContentView
-import kotlinx.coroutines.experimental.CancellationException
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
@@ -75,36 +77,43 @@ class CamTestActivity : AppCompatActivity() {
             val previewSizes = configMap.outputSizes<SurfaceHolder>()
             val videoSize = Recorder.chooseVideoSize(outputSizes)
             val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]
-            val cam = CamDevice(backCamId, camHandler)
-            cam.open()
-            ui.surfaceHolderState.createdChannel.consume {
-                for (created in this) if (created) break
-            }
-            val camDispatcher = camHandler.asCoroutineDispatcher()
-            async(camDispatcher) {
-                with(Recorder) {
-                    recorder.setupAndPrepare(videoSize)
+            CamDevice(backCamId, camHandler).use { cam ->
+                cam.open()
+                ui.surfaceHolderState.createdChannel.consume {
+                    for (created in this) if (created) break
                 }
-            }.await()
-            val surfaces = listOf(recorder.surface)
-            val session = cam.createCaptureSession(surfaces)
-            session.stateChannel.consume {
-                loop@ for (state in this) {
-                    when (state) {
-                        is CamCaptureSession.State.Configured -> break@loop
-                        is CamCaptureSession.State.Closed -> throw CancellationException("Session closed!")
+                val camDispatcher = camHandler.asCoroutineDispatcher()
+                async(camDispatcher) {
+                    with(Recorder) {
+                        recorder.setupAndPrepare(videoSize)
                     }
+                }.await()
+                val surfaces = listOf(recorder.surface)
+                cam.createCaptureSession(surfaces).use { session ->
+                    session.stateChannel.consume {
+                        loop@ for (state in this) {
+                            when (state) {
+                                is CamCaptureSession.State.Configured -> break@loop
+                                is CamCaptureSession.State.Closed -> throw CamCaptureSessionStateException(state)
+                            }
+                        }
+                    }
+                    val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
+                        surfaces.forEach(it::addTarget)
+                        it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
+                    }
+                    session.setRepeatingRequest(captureRequest)
+                    recorder.start()
+                    delay(5000)
+                    recorder.stop()
+                    session.stopRepeating()
+                    finish()
                 }
             }
-            val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
-                surfaces.forEach(it::addTarget)
-                it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
-            }
-            session.setRepeatingRequest(captureRequest)
-            recorder.start()
-            delay(5000)
-            recorder.stop()
-            finish()
+        } catch (e: CameraAccessException) {
+            Timber.e(e)
+        } catch (e: CamException) {
+            Timber.e(e)
         } catch (e: Exception) {
             Timber.e(e)
             finish()

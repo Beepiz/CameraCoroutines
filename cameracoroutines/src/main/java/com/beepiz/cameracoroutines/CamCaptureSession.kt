@@ -84,6 +84,8 @@ class CamCaptureSession internal constructor(
             captureCallback: CameraCaptureSession.CaptureCallback? = null
     ) = captureSession?.setRepeatingRequest(request, captureCallback, handler) ?: noSessionException
 
+    fun stopRepeating() = captureSession?.stopRepeating() ?: noSessionException
+
     private fun stateCallback(session: CCS, newState: State) {
         check(session.device == cameraDevice) {
             "The same callback has been used for different cameras! Expected: $cameraDevice but " +

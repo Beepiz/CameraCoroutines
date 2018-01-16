@@ -6,13 +6,14 @@ import android.hardware.camera2.CameraDevice.StateCallback
 import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.view.Surface
+import com.beepiz.cameracoroutines.exceptions.CamStateException
 import com.beepiz.cameracoroutines.extensions.cameraManager
 import kotlinx.coroutines.experimental.channels.ConflatedChannel
 import timber.log.Timber
 
-class CamDevice
-@RequiresPermission(Manifest.permission.CAMERA)
-constructor(private val camId: String, private val handler: Handler? = null) {
+class CamDevice @RequiresPermission(Manifest.permission.CAMERA) constructor(
+        private val camId: String,
+        private val handler: Handler? = null) : AutoCloseable {
 
     sealed class State {
         object Opened : State()
@@ -38,13 +39,16 @@ constructor(private val camId: String, private val handler: Handler? = null) {
     private val camManager = cameraManager
 
     private val camState = ConflatedChannel<State>()
-    private lateinit var cam: CameraDevice
+    private var cam: CameraDevice? = null
+    private val camOrThrow: CameraDevice get() = cam ?: throw IllegalStateException("Camera not opened!")
+    private var closed = false
 
     private val camStateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
             Timber.v("onOpened($camera)")
             cam = camera
-            camState.offer(State.Opened)
+            if (closed) camera.close()
+            else camState.offer(State.Opened)
         }
 
         override fun onDisconnected(camera: CameraDevice) {
@@ -71,14 +75,16 @@ constructor(private val camId: String, private val handler: Handler? = null) {
         val state = camState.receive()
         when (state) {
             State.Opened -> return
-            is State.Error -> TODO()
-            State.Disconnected -> TODO()
-            State.Closed -> TODO()
+            else -> throw CamStateException(state)
         }
-        //TODO: See if CameraDevice.StateCallback is automatically unregistered after error or disconnection.
     }
 
-    fun createCaptureSession(outputs: List<Surface>) = CamCaptureSession(cam, handler).also {
-        cam.createCaptureSession(outputs, it.sessionStateCallback, handler)
+    fun createCaptureSession(outputs: List<Surface>) = CamCaptureSession(camOrThrow, handler).also {
+        camOrThrow.createCaptureSession(outputs, it.sessionStateCallback, handler)
+    }
+
+    override fun close() {
+        closed = true
+        cam?.close()
     }
 }
