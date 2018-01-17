@@ -7,6 +7,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
 import android.media.MediaCodec
+import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaFormat
 import android.media.MediaMuxer
@@ -31,6 +32,7 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
+import splitties.init.appCtx
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -91,7 +93,15 @@ class CamTestActivity : AppCompatActivity() {
                     }
                 }.await()
                 val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
-                val videoFormat = MediaFormat.createVideoFormat("video/avc", videoSize.width, videoSize.height)
+                val videoFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_MPEG4, videoSize.width, videoSize.height).also {
+                    it.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
+                    val fps = 30
+                    val bitrate = Recorder.kushGaugeInBitsPerSecond(videoSize.width, videoSize.height, fps, 4)
+                    it.setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
+                    it.setInteger(MediaFormat.KEY_FRAME_RATE, fps)
+                    it.setInteger(MediaFormat.KEY_CAPTURE_RATE, fps)
+                    it.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 2)
+                }
                 val codecName = codecList.findEncoderForFormat(videoFormat)
                 val videoEncoder = MediaCodec.createByCodecName(codecName)
                 try {
@@ -105,7 +115,7 @@ class CamTestActivity : AppCompatActivity() {
                             it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
                         }
                         session.setRepeatingRequest(captureRequest)
-                        val outputPath = "TODO" //TODO: Put a proper path
+                        val outputPath = "${appCtx.getExternalFilesDir(null).absolutePath}/MuxedTest.mp4"
                         val muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
                         try {
                             muxer.setOrientationHint(90)
