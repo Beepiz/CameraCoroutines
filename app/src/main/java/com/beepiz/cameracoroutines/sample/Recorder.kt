@@ -1,10 +1,10 @@
 package com.beepiz.cameracoroutines.sample
 
 import android.media.MediaRecorder
-import android.util.Log
 import android.util.Size
 import splitties.concurrency.isUiThread
 import splitties.init.appCtx
+import timber.log.Timber
 
 object Recorder {
 
@@ -31,16 +31,16 @@ object Recorder {
         if (withAudio) setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         setVideoSize(w, h)
         setVideoFrameRate(desiredFrameRate)
-        setVideoEncodingBitRate(kushGaugeInBitsPerSecond(w, h, desiredFrameRate, motionFactor = 4))
+        setVideoEncodingBitRate(kushGaugeInBitsPerSecond(w, h, desiredFrameRate, motionFactor = 2))
         setOnErrorListener { mr, what, extra ->
-            Log.e("MEDIA_RECORDER", "$what $extra")
+            Timber.e("$what $extra")
         }
         prepare()
     }
 
     fun chooseVideoSize(choices: Array<Size>): Size {
         return choices.firstOrNull { (w, h) ->
-            minOf(w, h) <= 480 // && (it.width == (it.height * (16 / 9)))
+            minOf(w, h) <= 480 && maxOf(w, h) <= 800 // && (it.width == (it.height * (16 / 9)))
         } ?: choices.last()
     }
 
