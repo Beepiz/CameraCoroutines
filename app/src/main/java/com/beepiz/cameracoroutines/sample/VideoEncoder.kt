@@ -51,6 +51,7 @@ class VideoEncoder(videoFormat: MediaFormat, outputPath: String, orientationInDe
             }
             codec.releaseOutputBuffer(index, false)
             if (info.flags.hasFlag(MediaCodec.BUFFER_FLAG_END_OF_STREAM)) {
+                muxer.stop()
                 launch { eosChannel.send(Unit) }
             }
         }
