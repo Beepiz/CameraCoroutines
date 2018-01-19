@@ -24,8 +24,10 @@ class CamDevice @RequiresPermission(Manifest.permission.CAMERA) constructor(
                 StateCallback.ERROR_CAMERA_DISABLED -> "ERROR_CAMERA_DISABLED"
                 StateCallback.ERROR_CAMERA_DEVICE -> "ERROR_CAMERA_DEVICE"
                 StateCallback.ERROR_CAMERA_SERVICE -> "ERROR_CAMERA_SERVICE"
-                else -> "$errorCode"
+                else -> "Unknown error state: $errorCode"
             }
+
+            override fun toString() = errorString()
         }
 
         object Disconnected : State()
