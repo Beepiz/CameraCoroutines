@@ -23,22 +23,27 @@ import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 import splitties.concurrency.mainLooper
+import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.experimental.intrinsics.coroutineContext
+import kotlin.coroutines.experimental.intrinsics.suspendCoroutineOrReturn
 
 private val camManager = cameraManager
+
+suspend fun coroutineContext(): CoroutineContext = suspendCoroutineOrReturn { cont -> cont.context }
 
 @RequiresPermission(Manifest.permission.CAMERA)
 @SuppressLint("MissingPermission")
 @Throws(CameraAccessException::class, CamException::class, Exception::class)
 suspend fun recordVideo(frontCamera: Boolean,
-                        durationMillis: Int = 5000,
+                        durationMillis: Int = 10000,
                         outputPath: String,
-                        backgroundHandler: Handler) {
-    require(backgroundHandler.looper != mainLooper) {
-        "backgroundHandler is NOT on a background Looper!"
+                        bgHandler: Handler) {
+    require(bgHandler.looper != mainLooper) {
+        "bgHandler is NOT on a background Looper!"
     }
     val lensFacing = if (frontCamera) CameraCharacteristics.LENS_FACING_FRONT
     else CameraCharacteristics.LENS_FACING_BACK
-    recordVideo(lensFacing, durationMillis, outputPath, backgroundHandler)
+    recordVideo(lensFacing, durationMillis, outputPath, bgHandler)
 }
 
 @RequiresPermission(Manifest.permission.CAMERA)
@@ -47,19 +52,18 @@ private suspend fun recordVideo(lensFacing: Int,
                                 durationMillis: Int,
                                 outputPath: String,
                                 bgHandler: Handler) {
-    val camId: String = camManager.cameraIdList.firstOrNull {
-        val characteristics = camManager.getCameraCharacteristics(it)
-        characteristics[CameraCharacteristics.LENS_FACING] == lensFacing
-    } ?: throw NoSuchElementException("No back camera found")
-    val camCharacteristics = camManager.getCameraCharacteristics(camId)
-    val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
-    val videoSize = chooseVideoSize(configMap.outputSizes<MediaCodec>())
-    val (width, height) = videoSize
-    val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]
-    CamDevice(camId, bgHandler).use { cam ->
-        cam.open()
-        val bgDispatcher = bgHandler.asCoroutineDispatcher()
-        async(bgDispatcher) {
+    async(coroutineContext + bgHandler.asCoroutineDispatcher()) {
+        val camId: String = camManager.cameraIdList.firstOrNull {
+            val characteristics = camManager.getCameraCharacteristics(it)
+            characteristics[CameraCharacteristics.LENS_FACING] == lensFacing
+        } ?: throw NoSuchElementException("No back camera found")
+        val camCharacteristics = camManager.getCameraCharacteristics(camId)
+        val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+        val videoSize = chooseVideoSize(configMap.outputSizes<MediaCodec>())
+        val (width, height) = videoSize
+        val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]
+        CamDevice(camId, bgHandler).use { cam ->
+            cam.open()
             val videoFormat = createVideoFormat(width, height)
             val orientationInDegrees = 90 //TODO: Use sensorOrientation
             VideoEncoder(videoFormat, outputPath, orientationInDegrees).use { encoder ->
@@ -82,8 +86,8 @@ private suspend fun recordVideo(lensFacing: Int,
                     encoderInputSurface.release()
                 }
             }
-        }.await()
-    }
+        }
+    }.await()
 }
 
 private fun chooseVideoSize(choices: Array<Size>): Size {
