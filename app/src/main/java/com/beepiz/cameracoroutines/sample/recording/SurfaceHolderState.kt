@@ -1,4 +1,4 @@
-package com.beepiz.cameracoroutines.sample
+package com.beepiz.cameracoroutines.sample.recording
 
 import android.view.SurfaceHolder
 import kotlinx.coroutines.experimental.channels.ConflatedBroadcastChannel

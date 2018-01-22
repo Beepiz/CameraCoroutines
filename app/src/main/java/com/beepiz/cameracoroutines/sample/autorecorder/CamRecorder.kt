@@ -16,8 +16,8 @@ import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.CamDevice.Template
 import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.extensions.cameraManager
-import com.beepiz.cameracoroutines.sample.Recorder
-import com.beepiz.cameracoroutines.sample.VideoEncoder
+import com.beepiz.cameracoroutines.sample.recording.Recorder
+import com.beepiz.cameracoroutines.sample.recording.VideoMuxer
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
@@ -63,7 +63,7 @@ private suspend fun recordVideo(lensFacing: Int,
             cam.open()
             val videoFormat = createVideoFormat(width, height)
             val currentJob = coroutineContext[Job]!!
-            VideoEncoder(currentJob, videoFormat, outputPath, sensorOrientation).use { encoder ->
+            VideoMuxer(currentJob, videoFormat, outputPath, sensorOrientation).use { encoder ->
                 val encoderInputSurface = encoder.createInputSurface()
                 val surfaces = listOf(encoderInputSurface)
                 try {

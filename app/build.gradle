@@ -6,7 +6,7 @@ android {
     compileSdkVersion projectSdk_version
     defaultConfig {
         applicationId "com.beepiz.cameracoroutines.sample"
-        minSdkVersion 23
+        minSdkVersion 21
         targetSdkVersion projectSdk_target_version
         versionCode 1
         versionName "1.0"

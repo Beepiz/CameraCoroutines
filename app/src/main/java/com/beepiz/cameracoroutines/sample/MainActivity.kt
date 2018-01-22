@@ -3,6 +3,8 @@ package com.beepiz.cameracoroutines.sample
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Gravity
@@ -21,22 +23,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         contentView = v(::verticalLayout) {
             val lp = lParams(gravity = Gravity.CENTER_HORIZONTAL)
-            add(::button, lp) {
+            if (SDK_INT >= M) add(::button, lp) {
                 text = "Request camera permission"
                 onClick {
                     requestPermissions(arrayOf(Manifest.permission.CAMERA), 0)
                 }
             }
-            add(::button, lp) {
+            if (SDK_INT >= M) add(::button, lp) {
                 text = "Request microphone permission"
                 onClick {
                     requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 1)
-                }
-            }
-            add(::button, lp) {
-                text = "Request storage permission"
-                onClick {
-                    requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
                 }
             }
             add(::button, lp) {

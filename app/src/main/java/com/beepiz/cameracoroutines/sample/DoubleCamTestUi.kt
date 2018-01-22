@@ -3,6 +3,7 @@ package com.beepiz.cameracoroutines.sample
 import android.app.Activity
 import android.view.Surface
 import android.view.SurfaceView
+import com.beepiz.cameracoroutines.sample.recording.SurfaceHolderState
 import com.beepiz.cameracoroutines.sample.viewdsl.Ui
 import com.beepiz.cameracoroutines.sample.viewdsl.add
 import com.beepiz.cameracoroutines.sample.viewdsl.lParams

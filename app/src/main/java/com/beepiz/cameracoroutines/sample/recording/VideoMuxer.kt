@@ -1,9 +1,13 @@
-package com.beepiz.cameracoroutines.sample
+package com.beepiz.cameracoroutines.sample.recording
 
+import android.media.AudioFormat
+import android.media.AudioRecord
 import android.media.MediaCodec
 import android.media.MediaCodecList
 import android.media.MediaFormat
 import android.media.MediaMuxer
+import android.media.MediaRecorder
+import android.os.Build.VERSION.SDK_INT
 import android.os.Looper
 import android.view.Surface
 import com.beepiz.cameracoroutines.sample.extensions.hasFlag
@@ -14,14 +18,16 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import splitties.concurrency.isUiThread
 
-class VideoEncoder(private val parentJob: Job,
-                   videoFormat: MediaFormat,
-                   outputPath: String,
-                   orientationInDegrees: Int) : AutoCloseable {
+class VideoMuxer(private val parentJob: Job,
+                 videoFormat: MediaFormat,
+                 outputPath: String,
+                 orientationInDegrees: Int) : AutoCloseable {
 
-    private val codec: MediaCodec
+    private val videoCodec: MediaCodec
     private val muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
     private var muxerStarted = false
+
+    private val audioRecord: AudioRecord
 
     init {
         check(!isUiThread) { "UI thread is forbidden to avoid UI stutters" }
@@ -30,12 +36,29 @@ class VideoEncoder(private val parentJob: Job,
         }
         val codecList = MediaCodecList(MediaCodecList.REGULAR_CODECS)
         val codecName = codecList.findEncoderForFormat(videoFormat)
-        codec = MediaCodec.createByCodecName(codecName)
+        videoCodec = MediaCodec.createByCodecName(codecName)
         muxer.setOrientationHint(orientationInDegrees)
+
+        val audioSource = MediaRecorder.AudioSource.MIC
+        val audioFormat = AudioFormat.Builder()
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
+                .setSampleRate(44100)
+                .build()
+        val channelConfig = AudioFormat.CHANNEL_IN_MONO
+        val bufferSizeInBytes = AudioRecord.getMinBufferSize(audioFormat.sampleRate, channelConfig, audioFormat.encoding)
+        audioRecord = if (SDK_INT >= 23) {
+            AudioRecord.Builder()
+                    .setAudioSource(audioSource)
+                    .setAudioFormat(audioFormat)
+                    .setBufferSizeInBytes(bufferSizeInBytes)
+                    .build()
+        } else AudioRecord(audioSource, audioFormat.sampleRate, channelConfig, audioFormat.encoding, bufferSizeInBytes)
     }
 
     private val eosChannel = Channel<Unit>()
-    private var trackIndex = 0
+    private var videoTrackIndex = 0
+    private var audioTrackIndex = 0
 
     private val codecCallback = object : MediaCodec.Callback() {
         override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
@@ -52,7 +75,7 @@ class VideoEncoder(private val parentJob: Job,
                     encodedData.position(info.offset)
                     encodedData.limit(info.offset + info.size)
 
-                    muxer.writeSampleData(trackIndex, encodedData, info)
+                    muxer.writeSampleData(videoTrackIndex, encodedData, info)
                 }
                 codec.releaseOutputBuffer(index, false)
                 if (info.flags.hasFlag(MediaCodec.BUFFER_FLAG_END_OF_STREAM)) {
@@ -69,7 +92,7 @@ class VideoEncoder(private val parentJob: Job,
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
             try {
                 check(!muxerStarted) { "Format changed twice!" }
-                trackIndex = muxer.addTrack(format)
+                videoTrackIndex = muxer.addTrack(format)
                 muxer.start()
                 muxerStarted = true
             } catch (t: Throwable) {
@@ -83,26 +106,29 @@ class VideoEncoder(private val parentJob: Job,
     }
 
     init {
-        codec.setCallback(codecCallback)
-        codec.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        videoCodec.setCallback(codecCallback)
+        videoCodec.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
     }
 
     /**
      * **Don't forget to call [Surface.release] when done.**
      */
-    fun createInputSurface(): Surface = codec.createInputSurface()
+    fun createInputSurface(): Surface = videoCodec.createInputSurface()
 
     fun start() {
-        codec.start()
+        videoCodec.start()
+        audioRecord.startRecording()
     }
 
     fun stop(): Deferred<Unit> {
-        codec.signalEndOfInputStream()
+        videoCodec.signalEndOfInputStream()
+        audioRecord.stop()
         return async(parent = parentJob) { eosChannel.receive() }
     }
 
     override fun close() {
         muxer.release()
-        codec.release()
+        videoCodec.release()
+        audioRecord.release()
     }
 }

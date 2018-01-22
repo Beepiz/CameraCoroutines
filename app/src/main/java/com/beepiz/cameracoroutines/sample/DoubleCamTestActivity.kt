@@ -16,6 +16,7 @@ import com.beepiz.cameracoroutines.CamCaptureSession
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.extensions.cameraManager
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
+import com.beepiz.cameracoroutines.sample.recording.Recorder
 import com.beepiz.cameracoroutines.sample.viewdsl.lazy
 import com.beepiz.cameracoroutines.sample.viewdsl.setContentView
 import kotlinx.coroutines.experimental.CancellationException
