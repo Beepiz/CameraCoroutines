@@ -8,12 +8,16 @@ import android.os.Looper
 import android.view.Surface
 import com.beepiz.cameracoroutines.sample.extensions.hasFlag
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import splitties.concurrency.isUiThread
 
-class VideoEncoder(videoFormat: MediaFormat, outputPath: String, orientationInDegrees: Int) : AutoCloseable {
+class VideoEncoder(private val parentJob: Job,
+                   videoFormat: MediaFormat,
+                   outputPath: String,
+                   orientationInDegrees: Int) : AutoCloseable {
 
     private val codec: MediaCodec
     private val muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
@@ -35,38 +39,46 @@ class VideoEncoder(videoFormat: MediaFormat, outputPath: String, orientationInDe
 
     private val codecCallback = object : MediaCodec.Callback() {
         override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
-            val encodedData = codec.getOutputBuffer(index)
-            if (info.flags.hasFlag(MediaCodec.BUFFER_FLAG_CODEC_CONFIG)) {
-                info.size = 0
-            }
-            if (info.size != 0) {
-                check(muxerStarted) { "Muxed hasn't started!" }
-                // According to Android Tests (CameraRecordingStream),
-                // It is sometimes necessary to adjust the
-                // ByteBuffer values to match BufferInfo.
-                encodedData.position(info.offset)
-                encodedData.limit(info.offset + info.size)
+            try {
+                val encodedData = codec.getOutputBuffer(index)
+                if (info.flags.hasFlag(MediaCodec.BUFFER_FLAG_CODEC_CONFIG)) {
+                    info.size = 0
+                }
+                if (info.size != 0) {
+                    check(muxerStarted) { "Muxer hasn't started!" }
+                    // According to Android Tests (CameraRecordingStream),
+                    // It is sometimes necessary to adjust the
+                    // ByteBuffer values to match BufferInfo.
+                    encodedData.position(info.offset)
+                    encodedData.limit(info.offset + info.size)
 
-                muxer.writeSampleData(trackIndex, encodedData, info)
-            }
-            codec.releaseOutputBuffer(index, false)
-            if (info.flags.hasFlag(MediaCodec.BUFFER_FLAG_END_OF_STREAM)) {
-                muxer.stop()
-                launch { eosChannel.send(Unit) }
+                    muxer.writeSampleData(trackIndex, encodedData, info)
+                }
+                codec.releaseOutputBuffer(index, false)
+                if (info.flags.hasFlag(MediaCodec.BUFFER_FLAG_END_OF_STREAM)) {
+                    muxer.stop()
+                    launch(parent = parentJob) { eosChannel.send(Unit) }
+                }
+            } catch (t: Throwable) {
+                parentJob.cancel(t)
             }
         }
 
         override fun onInputBufferAvailable(codec: MediaCodec, index: Int) = throw UnsupportedOperationException()
 
         override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
-            check(!muxerStarted) { "Format changed twice!" }
-            trackIndex = muxer.addTrack(format)
-            muxer.start()
-            muxerStarted = true
+            try {
+                check(!muxerStarted) { "Format changed twice!" }
+                trackIndex = muxer.addTrack(format)
+                muxer.start()
+                muxerStarted = true
+            } catch (t: Throwable) {
+                parentJob.cancel(t)
+            }
         }
 
         override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
-            throw e
+            parentJob.cancel(e)
         }
     }
 

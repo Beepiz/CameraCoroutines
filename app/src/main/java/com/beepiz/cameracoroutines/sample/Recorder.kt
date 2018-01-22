@@ -44,6 +44,6 @@ object Recorder {
         } ?: choices.last()
     }
 
-    private operator fun Size.component1() = width
-    private operator fun Size.component2() = height
+    @Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component1() = width
+    @Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component2() = height
 }

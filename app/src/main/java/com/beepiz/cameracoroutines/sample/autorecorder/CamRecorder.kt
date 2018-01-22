@@ -19,17 +19,14 @@ import com.beepiz.cameracoroutines.extensions.cameraManager
 import com.beepiz.cameracoroutines.sample.Recorder
 import com.beepiz.cameracoroutines.sample.VideoEncoder
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 import splitties.concurrency.mainLooper
-import kotlin.coroutines.experimental.CoroutineContext
 import kotlin.coroutines.experimental.intrinsics.coroutineContext
-import kotlin.coroutines.experimental.intrinsics.suspendCoroutineOrReturn
 
 private val camManager = cameraManager
-
-suspend fun coroutineContext(): CoroutineContext = suspendCoroutineOrReturn { cont -> cont.context }
 
 @RequiresPermission(Manifest.permission.CAMERA)
 @SuppressLint("MissingPermission")
@@ -65,8 +62,8 @@ private suspend fun recordVideo(lensFacing: Int,
         CamDevice(camId, bgHandler).use { cam ->
             cam.open()
             val videoFormat = createVideoFormat(width, height)
-            val orientationInDegrees = 90 //TODO: Use sensorOrientation
-            VideoEncoder(videoFormat, outputPath, orientationInDegrees).use { encoder ->
+            val currentJob = coroutineContext[Job]!!
+            VideoEncoder(currentJob, videoFormat, outputPath, sensorOrientation).use { encoder ->
                 val encoderInputSurface = encoder.createInputSurface()
                 val surfaces = listOf(encoderInputSurface)
                 try {
@@ -108,7 +105,7 @@ private fun createVideoFormat(width: Int, height: Int): MediaFormat {
     }
 }
 
-private operator fun Size.component1() = width
-private operator fun Size.component2() = height
+@Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component1() = width
+@Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component2() = height
 
 private const val videoMimeType = MediaFormat.MIMETYPE_VIDEO_MPEG4
