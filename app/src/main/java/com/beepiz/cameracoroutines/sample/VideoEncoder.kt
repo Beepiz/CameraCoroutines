@@ -98,7 +98,7 @@ class VideoEncoder(private val parentJob: Job,
 
     fun stop(): Deferred<Unit> {
         codec.signalEndOfInputStream()
-        return async { eosChannel.receive() }
+        return async(parent = parentJob) { eosChannel.receive() }
     }
 
     override fun close() {
