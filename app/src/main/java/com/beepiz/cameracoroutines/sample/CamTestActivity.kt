@@ -10,10 +10,10 @@ import android.support.annotation.RequiresPermission
 import android.support.v7.app.AppCompatActivity
 import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.sample.autorecorder.recordVideo
+import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
 import com.beepiz.cameracoroutines.sample.viewdsl.setContentView
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import timber.log.Timber
 
@@ -52,16 +52,10 @@ class CamTestActivity : AppCompatActivity() {
         try {
             val camHandler = Handler(camThread.looper)
             val externalFilesDir = getExternalFilesDir(null).absolutePath
-            val backRecording = async(parent = coroutineContext[Job]) {
-                val backVideoPath = "$externalFilesDir/BackRecorded.mp4"
-                recordVideo(frontCamera = false, outputPath = backVideoPath, bgHandler = camHandler)
-            }
-            backRecording.await()
-            val frontRecording = async(parent = coroutineContext[Job]) {
-                val frontVideoPath = "$externalFilesDir/FrontRecorded.mp4"
-                recordVideo(frontCamera = true, outputPath = frontVideoPath, bgHandler = camHandler)
-            }
-            frontRecording.await()
+            val backVideoPath = "$externalFilesDir/BackRecorded.mp4"
+            val frontVideoPath = "$externalFilesDir/FrontRecorded.mp4"
+            recordVideo(CamCharacteristics.LensFacing.BACK, backVideoPath, camHandler)
+            recordVideo(CamCharacteristics.LensFacing.FRONT, frontVideoPath, camHandler)
         } catch (e: CameraAccessException) {
             Timber.e(e)
         } catch (e: CamException) {

@@ -7,18 +7,16 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
 import android.media.MediaCodec
-import android.media.MediaCodecInfo
-import android.media.MediaFormat
+import android.media.MediaRecorder
 import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.util.Size
 import com.beepiz.cameracoroutines.CamDevice
-import com.beepiz.cameracoroutines.CamDevice.Template
 import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.extensions.cameraManager
-import com.beepiz.cameracoroutines.sample.recording.Recorder
-import com.beepiz.cameracoroutines.sample.recording.VideoMuxer
+import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
+import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
 import kotlinx.coroutines.experimental.async
@@ -31,24 +29,24 @@ private val camManager = cameraManager
 @RequiresPermission(Manifest.permission.CAMERA)
 @SuppressLint("MissingPermission")
 @Throws(CameraAccessException::class, CamException::class, Exception::class)
-suspend fun recordVideo(frontCamera: Boolean,
-                        durationMillis: Int = 10000,
-                        outputPath: String,
-                        bgHandler: Handler) {
-    require(bgHandler.looper != mainLooper) {
-        "bgHandler is NOT on a background Looper!"
-    }
-    val lensFacing = if (frontCamera) CameraCharacteristics.LENS_FACING_FRONT
-    else CameraCharacteristics.LENS_FACING_BACK
-    recordVideo(lensFacing, durationMillis, outputPath, bgHandler)
-}
+suspend fun recordVideo(
+        lensFacing: CamCharacteristics.LensFacing,
+        outputPath: String,
+        bgHandler: Handler,
+        durationMillis: Int = 10_000
+) = recordVideo(lensFacing.intValue, durationMillis, outputPath, bgHandler)
 
 @RequiresPermission(Manifest.permission.CAMERA)
 @SuppressLint("MissingPermission")
+@Throws
 private suspend fun recordVideo(lensFacing: Int,
                                 durationMillis: Int,
                                 outputPath: String,
                                 bgHandler: Handler) {
+    require(bgHandler.looper != mainLooper) {
+        "bgHandler is NOT on a background Looper!"
+    }
+    val currentJob = coroutineContext[Job]!!
     async(coroutineContext + bgHandler.asCoroutineDispatcher()) {
         val camId: String = camManager.cameraIdList.firstOrNull {
             val characteristics = camManager.getCameraCharacteristics(it)
@@ -57,32 +55,30 @@ private suspend fun recordVideo(lensFacing: Int,
         val camCharacteristics = camManager.getCameraCharacteristics(camId)
         val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val videoSize = chooseVideoSize(configMap.outputSizes<MediaCodec>())
-        val (width, height) = videoSize
         val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]
-        CamDevice(camId, bgHandler).use { cam ->
+        val cam = CamDevice(camId, bgHandler)
+        val recorder = MediaRecorder()
+        try {
             cam.open()
-            val videoFormat = createVideoFormat(width, height)
-            val currentJob = coroutineContext[Job]!!
-            VideoMuxer(currentJob, videoFormat, outputPath, sensorOrientation).use { encoder ->
-                val encoderInputSurface = encoder.createInputSurface()
-                val surfaces = listOf(encoderInputSurface)
-                try {
-                    cam.createCaptureSession(surfaces).use { captureSession ->
-                        captureSession.awaitConfiguredState()
-                        val captureRequest = captureSession.createCaptureRequest(Template.RECORD) {
-                            surfaces.forEach(it::addTarget)
-                            it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
-                        }
-                        captureSession.setRepeatingRequest(captureRequest)
-                        encoder.start()
-                        delay(durationMillis)
-                        encoder.stop().await()
-                        captureSession.stopRepeating()
-                    }
-                } finally {
-                    encoderInputSurface.release()
-                }
+            with(VideoRecorder) {
+                recorder.setupAndPrepare(currentJob, videoSize, sensorOrientation, outputPath)
             }
+            val surfaces = listOf(recorder.surface)
+            cam.createCaptureSession(surfaces).use { session ->
+                session.awaitConfiguredState()
+                val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
+                    surfaces.forEach(it::addTarget)
+                    it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
+                }
+                session.setRepeatingRequest(captureRequest)
+                recorder.start()
+                delay(durationMillis)
+                session.stopRepeating()
+            }
+            recorder.stop()
+        } finally {
+            cam.close()
+            recorder.release()
         }
     }.await()
 }
@@ -93,19 +89,8 @@ private fun chooseVideoSize(choices: Array<Size>): Size {
     } ?: choices.last()
 }
 
-private fun createVideoFormat(width: Int, height: Int): MediaFormat {
-    return MediaFormat.createVideoFormat(videoMimeType, width, height).apply {
-        setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
-        val fps = 30
-        val bitrate = Recorder.kushGaugeInBitsPerSecond(width, height, fps, 4)
-        setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
-        setInteger(MediaFormat.KEY_FRAME_RATE, fps)
-        setInteger(MediaFormat.KEY_CAPTURE_RATE, fps)
-        setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5)
-    }
-}
+@Suppress("NOTHING_TO_INLINE")
+private inline operator fun Size.component1() = width
 
-@Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component1() = width
-@Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component2() = height
-
-private const val videoMimeType = MediaFormat.MIMETYPE_VIDEO_MPEG4
+@Suppress("NOTHING_TO_INLINE")
+private inline operator fun Size.component2() = height

@@ -41,12 +41,6 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this@MainActivity, CamTestActivity::class.java))
                 }
             }
-            add(::button, lp) {
-                text = "Open Double Cam test"
-                onClick {
-                    startActivity(Intent(this@MainActivity, DoubleCamTestActivity::class.java))
-                }
-            }
         }
     }
 }

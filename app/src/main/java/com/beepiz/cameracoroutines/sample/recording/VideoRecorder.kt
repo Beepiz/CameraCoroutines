@@ -2,11 +2,10 @@ package com.beepiz.cameracoroutines.sample.recording
 
 import android.media.MediaRecorder
 import android.util.Size
+import kotlinx.coroutines.experimental.Job
 import splitties.concurrency.isUiThread
-import splitties.init.appCtx
-import timber.log.Timber
 
-object Recorder {
+object VideoRecorder {
 
     fun kushGaugeInBitsPerSecond(
             recordingWidth: Int,
@@ -18,22 +17,22 @@ object Recorder {
 
     const val desiredFrameRate = 30
 
-    fun MediaRecorder.setupAndPrepare(size: Size, fileName: String = "CamCoroutinesTest", withAudio: Boolean = true) {
+    fun MediaRecorder.setupAndPrepare(parentJob: Job, size: Size, orientationInDegrees: Int, outputPath: String, withAudio: Boolean = true) {
         val w = size.width
         val h = size.height
         check(!isUiThread)
-        setOrientationHint(90)
+        setOrientationHint(orientationInDegrees)
         setVideoSource(MediaRecorder.VideoSource.SURFACE)
         if (withAudio) setAudioSource(MediaRecorder.AudioSource.DEFAULT)
         setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        setOutputFile("${appCtx.getExternalFilesDir(null).absolutePath}/$fileName.mp4")
+        setOutputFile(outputPath)
         setVideoEncoder(MediaRecorder.VideoEncoder.H264)
         if (withAudio) setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         setVideoSize(w, h)
         setVideoFrameRate(desiredFrameRate)
         setVideoEncodingBitRate(kushGaugeInBitsPerSecond(w, h, desiredFrameRate, motionFactor = 2))
         setOnErrorListener { mr, what, extra ->
-            Timber.e("$what $extra")
+            parentJob.cancel(MediaRecorderException(what, extra))
         }
         prepare()
     }
@@ -44,6 +43,9 @@ object Recorder {
         } ?: choices.last()
     }
 
-    @Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component1() = width
-    @Suppress("NOTHING_TO_INLINE") private inline operator fun Size.component2() = height
+    @Suppress("NOTHING_TO_INLINE")
+    private inline operator fun Size.component1() = width
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline operator fun Size.component2() = height
 }
