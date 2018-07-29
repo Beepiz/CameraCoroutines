@@ -36,7 +36,7 @@ class DoubleCamTestActivity : AppCompatActivity() {
     private lateinit var frontJob: Job
     private lateinit var backJob: Job
 
-    private val camThread by kotlin.lazy { HandlerThread("camera") }
+    private val camThread by lazy { HandlerThread("camera") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
