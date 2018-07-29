@@ -2,7 +2,7 @@ package com.beepiz.cameracoroutines
 
 import android.hardware.camera2.CameraCharacteristics.LENS_FACING
 import android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK
-import com.beepiz.cameracoroutines.extensions.cameraManager
+import splitties.systemservices.cameraManager
 
 suspend fun testCamera() {
     val camManager = cameraManager

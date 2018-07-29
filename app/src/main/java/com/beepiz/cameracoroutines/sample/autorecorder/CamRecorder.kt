@@ -13,14 +13,14 @@ import android.support.annotation.RequiresPermission
 import android.util.Size
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.exceptions.CamException
-import com.beepiz.cameracoroutines.extensions.cameraManager
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.withContext
+import splitties.systemservices.cameraManager
 import splitties.uithread.mainLooper
 import kotlin.coroutines.experimental.coroutineContext
 
@@ -47,7 +47,7 @@ private suspend fun recordVideo(lensFacing: Int,
         "bgHandler is NOT on a background Looper!"
     }
     val currentJob = coroutineContext[Job]!!
-    async(coroutineContext + bgHandler.asCoroutineDispatcher()) {
+    withContext(coroutineContext + bgHandler.asCoroutineDispatcher()) {
         val camId: String = camManager.cameraIdList.firstOrNull {
             val characteristics = camManager.getCameraCharacteristics(it)
             characteristics[CameraCharacteristics.LENS_FACING] == lensFacing
@@ -80,7 +80,7 @@ private suspend fun recordVideo(lensFacing: Int,
             cam.close()
             recorder.release()
         }
-    }.await()
+    }
 }
 
 private fun chooseVideoSize(choices: Array<Size>): Size {

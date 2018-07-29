@@ -11,10 +11,10 @@ import android.support.v7.app.AppCompatActivity
 import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.sample.autorecorder.recordVideo
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
-import com.beepiz.cameracoroutines.sample.viewdsl.setContentView
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import splitties.viewdsl.core.setContentView
 import timber.log.Timber
 
 class CamTestActivity : AppCompatActivity() {

@@ -21,5 +21,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".CamTestActivity"/>
+        <activity android:name=".doublecam.DoubleCamTestActivity"/>
     </application>
 </manifest>

@@ -3,15 +3,15 @@ package com.beepiz.cameracoroutines.sample
 import android.app.Activity
 import android.view.Gravity
 import android.widget.FrameLayout
-import android.widget.ProgressBar
-import com.beepiz.cameracoroutines.sample.viewdsl.Ui
-import com.beepiz.cameracoroutines.sample.viewdsl.add
-import com.beepiz.cameracoroutines.sample.viewdsl.lParams
-import com.beepiz.cameracoroutines.sample.viewdsl.v
+import splitties.viewdsl.appcompat.styles.progressBar
+import splitties.viewdsl.core.Ui
+import splitties.viewdsl.core.add
+import splitties.viewdsl.core.lParams
+import splitties.viewdsl.core.v
 
 class CamTestUi(override val ctx: Activity) : Ui {
 
     override val root = v(::FrameLayout) {
-        add(::ProgressBar, lParams(gravity = Gravity.CENTER))
+        add(v(::progressBar), lParams(gravity = Gravity.CENTER))
     }
 }
