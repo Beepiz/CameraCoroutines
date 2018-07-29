@@ -3,7 +3,7 @@ package com.beepiz.cameracoroutines.sample.recording
 import android.media.MediaRecorder
 import android.util.Size
 import kotlinx.coroutines.experimental.Job
-import splitties.concurrency.isUiThread
+import splitties.uithread.isUiThread
 
 object VideoRecorder {
 

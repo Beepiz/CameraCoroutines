@@ -7,8 +7,8 @@ import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.view.Surface
 import com.beepiz.cameracoroutines.exceptions.CamStateException
-import com.beepiz.cameracoroutines.extensions.cameraManager
 import kotlinx.coroutines.experimental.channels.ConflatedChannel
+import splitties.systemservices.cameraManager
 import timber.log.Timber
 
 class CamDevice @RequiresPermission(Manifest.permission.CAMERA) constructor(

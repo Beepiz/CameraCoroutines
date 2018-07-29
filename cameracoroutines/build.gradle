@@ -35,8 +35,9 @@ dependencies {
     api "com.android.support:support-annotations:$supportLibs_version"
 
     // Splitties
-    api "xyz.louiscad.splitties:splitties-appctx:$splitties_version"
-    api "xyz.louiscad.splitties:splitties-concurrency:$splitties_version"
+    api "com.louiscad.splitties:splitties-appctx:$splitties_version"
+    api "com.louiscad.splitties:splitties-uithread:$splitties_version"
+    api "com.louiscad.splitties:splitties-systemservices:$splitties_version"
 
     // Log utilities
     api "com.jakewharton.timber:timber:$timber_version"

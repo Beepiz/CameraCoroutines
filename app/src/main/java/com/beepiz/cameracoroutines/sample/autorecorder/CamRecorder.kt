@@ -21,7 +21,7 @@ import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
-import splitties.concurrency.mainLooper
+import splitties.uithread.mainLooper
 import kotlin.coroutines.experimental.coroutineContext
 
 private val camManager = cameraManager
