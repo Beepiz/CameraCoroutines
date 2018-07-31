@@ -51,7 +51,7 @@ private suspend fun recordVideo(lensFacing: Int,
         val camId: String = camManager.cameraIdList.firstOrNull {
             val characteristics = camManager.getCameraCharacteristics(it)
             characteristics[CameraCharacteristics.LENS_FACING] == lensFacing
-        } ?: throw NoSuchElementException("No back camera found")
+        } ?: throw NoSuchElementException("No camera with requested facing ($lensFacing) found")
         val camCharacteristics = camManager.getCameraCharacteristics(camId)
         val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val videoSize = chooseVideoSize(configMap.outputSizes<MediaCodec>())
