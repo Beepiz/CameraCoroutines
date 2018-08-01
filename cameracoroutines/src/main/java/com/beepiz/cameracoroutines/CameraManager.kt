@@ -8,11 +8,8 @@ import android.support.annotation.RequiresPermission
 import com.beepiz.cameracoroutines.exceptions.CamStateException
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.HandlerContext
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.yield
 import kotlin.coroutines.experimental.coroutineContext
 
 @RequiresPermission(Manifest.permission.CAMERA)
@@ -20,7 +17,7 @@ suspend fun <R> CameraManager.openAndUseCamera(
         cameraId: String,
         handler: Handler? = null,
         block: suspend (CameraDevice) -> R
-):R {
+): R {
     val context = if (handler == null) coroutineContext else coroutineContext + HandlerContext(handler).immediate
     val openedCamera = CompletableDeferred<CameraDevice>()
     val completion: Deferred<R> = async(context) {
