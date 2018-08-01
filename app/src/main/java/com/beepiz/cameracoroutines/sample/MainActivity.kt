@@ -44,6 +44,10 @@ class MainActivity : AppCompatActivity() {
                 text = "Double cam test"
                 onClick { start<DoubleCamTestActivity>() }
             }, lp)
+            add(v(::button) {
+                text = "Launch extensions approach Activity"
+                onClick { start<ExtensionsApproachCamActivity>() }
+            }, lp)
         }
     }
 }

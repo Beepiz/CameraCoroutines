@@ -22,5 +22,6 @@
         </activity>
         <activity android:name=".CamTestActivity"/>
         <activity android:name=".doublecam.DoubleCamTestActivity"/>
+        <activity android:name=".ExtensionsApproachCamActivity"/>
     </application>
 </manifest>

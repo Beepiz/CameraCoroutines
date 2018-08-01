@@ -11,7 +11,9 @@ import kotlinx.coroutines.experimental.channels.ConflatedChannel
 import splitties.systemservices.cameraManager
 import timber.log.Timber
 
-class CamDevice @RequiresPermission(Manifest.permission.CAMERA) constructor(
+class CamDevice
+@Deprecated("Use openAndUseCamera instead of instantiating this class.")
+@RequiresPermission(Manifest.permission.CAMERA) constructor(
         private val camId: String,
         private val handler: Handler? = null) : AutoCloseable {
 
@@ -42,7 +44,8 @@ class CamDevice @RequiresPermission(Manifest.permission.CAMERA) constructor(
 
     private val camState = ConflatedChannel<State>()
     private var cam: CameraDevice? = null
-    private val camOrThrow: CameraDevice get() = cam ?: throw IllegalStateException("Camera not opened!")
+    private val camOrThrow: CameraDevice
+        get() = cam ?: throw IllegalStateException("Camera not opened!")
     private var closed = false
 
     private val camStateCallback = object : CameraDevice.StateCallback() {

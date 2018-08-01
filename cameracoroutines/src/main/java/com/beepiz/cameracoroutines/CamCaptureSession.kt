@@ -3,20 +3,31 @@ package com.beepiz.cameracoroutines
 import android.annotation.TargetApi
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
-import android.hardware.camera2.CameraDevice.*
+import android.hardware.camera2.CameraDevice.TEMPLATE_MANUAL
+import android.hardware.camera2.CameraDevice.TEMPLATE_PREVIEW
+import android.hardware.camera2.CameraDevice.TEMPLATE_RECORD
+import android.hardware.camera2.CameraDevice.TEMPLATE_STILL_CAPTURE
+import android.hardware.camera2.CameraDevice.TEMPLATE_VIDEO_SNAPSHOT
+import android.hardware.camera2.CameraDevice.TEMPLATE_ZERO_SHUTTER_LAG
 import android.hardware.camera2.CaptureRequest
 import android.os.Build.VERSION_CODES.M
 import android.os.Build.VERSION_CODES.O
 import android.os.Handler
 import android.support.annotation.RequiresApi
 import android.view.Surface
-import com.beepiz.cameracoroutines.CamDevice.Template.*
+import com.beepiz.cameracoroutines.CamCaptureSession.State.Closed
+import com.beepiz.cameracoroutines.CamCaptureSession.State.Configured
+import com.beepiz.cameracoroutines.CamCaptureSession.State.Configured.InputQueueEmpty
+import com.beepiz.cameracoroutines.CamDevice.Template.MANUAL
+import com.beepiz.cameracoroutines.CamDevice.Template.PREVIEW
+import com.beepiz.cameracoroutines.CamDevice.Template.RECORD
+import com.beepiz.cameracoroutines.CamDevice.Template.STILL_CAPTURE
+import com.beepiz.cameracoroutines.CamDevice.Template.VIDEO_SNAPSHOT
+import com.beepiz.cameracoroutines.CamDevice.Template.ZERO_SHUTTER_LAG
 import com.beepiz.cameracoroutines.exceptions.CamCaptureSessionStateException
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.experimental.channels.consume
-
-private typealias CCS = CameraCaptureSession
 
 class CamCaptureSession internal constructor(
         private val cameraDevice: CameraDevice,

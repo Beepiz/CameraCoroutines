@@ -21,7 +21,7 @@ class CamTestActivity : AppCompatActivity() {
 
     private lateinit var testJob: Job
 
-    private val camThread by kotlin.lazy { HandlerThread("camera") }
+    private val camThread by lazy { HandlerThread("camera") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +48,7 @@ class CamTestActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     @RequiresPermission(Manifest.permission.CAMERA)
-    private fun testCamera() = launch(UI) {
+    private fun testCamera() = launch(UI.immediate) {
         try {
             val camHandler = Handler(camThread.looper)
             val externalFilesDir = getExternalFilesDir(null).absolutePath

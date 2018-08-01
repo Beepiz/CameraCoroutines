@@ -7,45 +7,41 @@ import android.os.Handler
 import android.support.annotation.RequiresPermission
 import com.beepiz.cameracoroutines.exceptions.CamStateException
 import kotlinx.coroutines.experimental.CompletableDeferred
+import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.HandlerContext
+import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
 import kotlin.coroutines.experimental.coroutineContext
 
 @RequiresPermission(Manifest.permission.CAMERA)
-suspend fun CameraManager.openAndUseCamera(
+suspend fun <R> CameraManager.openAndUseCamera(
         cameraId: String,
         handler: Handler? = null,
-        block: suspend (CameraDevice) -> Unit
-) {
+        block: suspend (CameraDevice) -> R
+):R {
     val context = if (handler == null) coroutineContext else coroutineContext + HandlerContext(handler).immediate
-    var job: Job? = null
-    val completion = CompletableDeferred<Unit>()
+    val openedCamera = CompletableDeferred<CameraDevice>()
+    val completion: Deferred<R> = async(context) {
+        openedCamera.await().use { camera ->
+            block(camera)
+        }
+    }
     val closed = CompletableDeferred<Unit>()
     val stateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
-            job = launch(context) {
-                try {
-                    camera.use { camera ->
-                        yield()
-                        block(camera)
-                        completion.complete(Unit)
-                    }
-                } catch (t: Throwable) {
-                    completion.completeExceptionally(t)
-                }
-            }
+            openedCamera.complete(camera)
         }
 
         override fun onDisconnected(camera: CameraDevice) {
             camera.close()
-            job?.cancel(CamStateException(CamDevice.State.Disconnected))
+            completion.cancel(CamStateException(CamDevice.State.Disconnected))
         }
 
         override fun onError(camera: CameraDevice, error: Int) {
             camera.close()
-            job?.cancel(CamStateException(CamDevice.State.Error(error)))
+            completion.cancel(CamStateException(CamDevice.State.Error(error)))
         }
 
         override fun onClosed(camera: CameraDevice) {
@@ -53,7 +49,7 @@ suspend fun CameraManager.openAndUseCamera(
         }
     }
     openCamera(cameraId, stateCallback, handler)
-    try {
+    return try {
         completion.await()
     } finally {
         closed.await()
