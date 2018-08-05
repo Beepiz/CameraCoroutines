@@ -5,6 +5,7 @@ import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
 import android.media.MediaCodec
 import android.media.MediaRecorder
+import android.os.Handler
 import android.util.Size
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.createAndUseSession
@@ -18,11 +19,21 @@ import splitties.systemservices.cameraManager
 import splitties.uithread.isUiThread
 import kotlin.coroutines.experimental.coroutineContext
 
-suspend fun recordVideo(lensFacing: LensFacing, outputPath: String, awaitStop: suspend () -> Unit) {
-    recordVideo(lensFacing.intValue, outputPath, awaitStop)
+suspend fun recordVideo(
+        lensFacing: LensFacing,
+        outputPath: String,
+        handler: Handler? = null,
+        awaitStop: suspend () -> Unit
+) {
+    recordVideo(lensFacing.intValue, outputPath, handler, awaitStop)
 }
 
-private suspend fun recordVideo(lensFacing: Int, outputPath: String, awaitStop: suspend () -> Unit) {
+private suspend fun recordVideo(
+        lensFacing: Int,
+        outputPath: String,
+        handler: Handler? = null,
+        awaitStop: suspend () -> Unit
+) {
     //TODO("Try coroutines experimental dispatcher")
     //TODO("Try main thread async dispatcher for default UI thread usage")
     val camManager = cameraManager
@@ -39,10 +50,10 @@ private suspend fun recordVideo(lensFacing: Int, outputPath: String, awaitStop: 
             setupForVideoRecording(videoSize, sensorOrientation, outputPath)
         }
     }
-    cameraManager.openAndUseCamera(camId) { camera ->
+    cameraManager.openAndUseCamera(camId, handler) { camera ->
         recorderAsync.await().use { recorder ->
             val surfaces = listOf(recorder.surface)
-            camera.createAndUseSession(surfaces) { session ->
+            camera.createAndUseSession(surfaces, handler) { session ->
                 session.awaitConfiguredState()
                 val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
                     surfaces.forEach(it::addTarget)
