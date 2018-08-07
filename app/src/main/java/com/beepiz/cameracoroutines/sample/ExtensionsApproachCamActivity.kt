@@ -7,13 +7,11 @@ import android.os.HandlerThread
 import android.support.v7.app.AppCompatActivity
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.exceptions.CamStateException
-import com.beepiz.cameracoroutines.extensions.HandlerElement
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.createJob
 import com.beepiz.cameracoroutines.sample.extensions.media.recordVideo
-import com.beepiz.cameracoroutines.sample.extensions.useHandler
+import com.beepiz.cameracoroutines.sample.extensions.useWithHandlerInContext
 import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.android.HandlerContext
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
@@ -29,6 +27,7 @@ import splitties.viewdsl.core.v
 import splitties.viewdsl.core.verticalLayout
 import splitties.views.gravityCenterHorizontal
 import timber.log.Timber
+import java.io.IOException
 
 class ExtensionsApproachCamActivity : AppCompatActivity() {
 
@@ -47,16 +46,15 @@ class ExtensionsApproachCamActivity : AppCompatActivity() {
         val tillOnStop = lifecycle.createJob(Event.ON_STOP)
         launch(UI, parent = tillOnStop) {
             try {
-                HandlerThread("cam").useHandler { handler ->
-                    withContext(HandlerContext(handler) + HandlerElement(handler)) {
-                        val externalFilesDir = getExternalFilesDir(null).absolutePath
-                        val videoPath = "$externalFilesDir/ExtensionsApproachVideoRecord.mp4"
-                        recordVideo(CamCharacteristics.LensFacing.BACK, videoPath) {
-                            withContext(UI) {
-                                toast("Recording…")
-                                delay(6000)
-                                longToast("Recording succeeded!")
-                            }
+                HandlerThread("cam").useWithHandlerInContext {
+                    val externalFilesDir = getExternalFilesDir(null)?.absolutePath
+                            ?: throw IOException("External storage unavailable")
+                    val videoPath = "$externalFilesDir/ExtensionsApproachVideoRecord.mp4"
+                    recordVideo(CamCharacteristics.LensFacing.BACK, videoPath) {
+                        withContext(UI) {
+                            toast("Recording…")
+                            delay(6000)
+                            longToast("Recording succeeded!")
                         }
                     }
                 }
