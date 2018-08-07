@@ -7,6 +7,7 @@ import android.os.HandlerThread
 import android.support.v7.app.AppCompatActivity
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.exceptions.CamStateException
+import com.beepiz.cameracoroutines.extensions.HandlerElement
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.createJob
 import com.beepiz.cameracoroutines.sample.extensions.media.recordVideo
@@ -20,6 +21,7 @@ import kotlinx.coroutines.experimental.withContext
 import splitties.exceptions.illegal
 import splitties.toast.longToast
 import splitties.toast.toast
+import splitties.viewdsl.appcompat.styles.progressBar
 import splitties.viewdsl.appcompat.textView
 import splitties.viewdsl.core.add
 import splitties.viewdsl.core.lParams
@@ -36,6 +38,7 @@ class ExtensionsApproachCamActivity : AppCompatActivity() {
             add(v(::textView) {
                 text = "Extensions approach!"
             }, lParams(gravity = gravityCenterHorizontal))
+            add(v(::progressBar), lParams(gravity = gravityCenterHorizontal))
         })
     }
 
@@ -45,10 +48,10 @@ class ExtensionsApproachCamActivity : AppCompatActivity() {
         launch(UI, parent = tillOnStop) {
             try {
                 HandlerThread("cam").useHandler { handler ->
-                    withContext(HandlerContext(handler)) {
+                    withContext(HandlerContext(handler) + HandlerElement(handler)) {
                         val externalFilesDir = getExternalFilesDir(null).absolutePath
                         val videoPath = "$externalFilesDir/ExtensionsApproachVideoRecord.mp4"
-                        recordVideo(CamCharacteristics.LensFacing.BACK, videoPath, handler) {
+                        recordVideo(CamCharacteristics.LensFacing.BACK, videoPath) {
                             withContext(UI) {
                                 toast("Recording…")
                                 delay(6000)

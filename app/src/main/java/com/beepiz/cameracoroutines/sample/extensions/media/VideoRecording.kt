@@ -5,16 +5,17 @@ import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
 import android.media.MediaCodec
 import android.media.MediaRecorder
-import android.os.Handler
 import android.util.Size
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.createAndUseSession
+import com.beepiz.cameracoroutines.extensions.HandlerElement
 import com.beepiz.cameracoroutines.openAndUseCamera
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
+import splitties.exceptions.illegal
 import splitties.systemservices.cameraManager
 import splitties.uithread.isUiThread
 import kotlin.coroutines.experimental.coroutineContext
@@ -22,20 +23,20 @@ import kotlin.coroutines.experimental.coroutineContext
 suspend fun recordVideo(
         lensFacing: LensFacing,
         outputPath: String,
-        handler: Handler? = null,
         awaitStop: suspend () -> Unit
 ) {
-    recordVideo(lensFacing.intValue, outputPath, handler, awaitStop)
+    recordVideo(lensFacing.intValue, outputPath, awaitStop)
 }
 
 private suspend fun recordVideo(
         lensFacing: Int,
         outputPath: String,
-        handler: Handler? = null,
         awaitStop: suspend () -> Unit
 ) {
     //TODO("Try coroutines experimental dispatcher")
     //TODO("Try main thread async dispatcher for default UI thread usage")
+    val handler = coroutineContext[HandlerElement]?.handler
+            ?: illegal("Required HandlerElement not found in the coroutineContext")
     val camManager = cameraManager
     val camId: String = camManager.cameraIdList.firstOrNull {
         val characteristics = camManager.getCameraCharacteristics(it)
