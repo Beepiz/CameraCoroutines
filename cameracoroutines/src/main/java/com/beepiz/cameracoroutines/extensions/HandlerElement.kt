@@ -3,6 +3,7 @@ package com.beepiz.cameracoroutines.extensions
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
+import splitties.exceptions.illegal
 import kotlin.coroutines.experimental.AbstractCoroutineContextElement
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -13,3 +14,6 @@ class HandlerElement(val handler: Handler) : AbstractCoroutineContextElement(Key
         inline operator fun invoke(thread: HandlerThread) = HandlerElement(Handler(thread.looper))
     }
 }
+
+fun CoroutineContext.requireHandler(): Handler = this[HandlerElement]?.handler
+        ?: illegal("Required HandlerElement not found in the coroutineContext")

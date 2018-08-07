@@ -8,14 +8,12 @@ import android.media.MediaRecorder
 import android.util.Size
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.createAndUseSession
-import com.beepiz.cameracoroutines.extensions.HandlerElement
 import com.beepiz.cameracoroutines.openAndUseCamera
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
-import splitties.exceptions.illegal
 import splitties.systemservices.cameraManager
 import splitties.uithread.isUiThread
 import kotlin.coroutines.experimental.coroutineContext
@@ -35,8 +33,6 @@ private suspend fun recordVideo(
 ) {
     //TODO("Try coroutines experimental dispatcher")
     //TODO("Try main thread async dispatcher for default UI thread usage")
-    val handler = coroutineContext[HandlerElement]?.handler
-            ?: illegal("Required HandlerElement not found in the coroutineContext")
     val camManager = cameraManager
     val camId: String = camManager.cameraIdList.firstOrNull {
         val characteristics = camManager.getCameraCharacteristics(it)
@@ -51,10 +47,10 @@ private suspend fun recordVideo(
             setupForVideoRecording(videoSize, sensorOrientation, outputPath)
         }
     }
-    cameraManager.openAndUseCamera(camId, handler) { camera ->
+    cameraManager.openAndUseCamera(camId) { camera ->
         recorderAsync.await().use { recorder ->
             val surfaces = listOf(recorder.surface)
-            camera.createAndUseSession(surfaces, handler) { session ->
+            camera.createAndUseSession(surfaces) { session ->
                 session.awaitConfiguredState()
                 val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
                     surfaces.forEach(it::addTarget)
