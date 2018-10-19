@@ -12,11 +12,11 @@ import com.beepiz.cameracoroutines.openAndUseCamera
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
-import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.coroutineScope
 import splitties.systemservices.cameraManager
 import splitties.uithread.isUiThread
-import kotlin.coroutines.experimental.coroutineContext
 
 suspend fun recordVideo(
         lensFacing: LensFacing,
@@ -30,19 +30,17 @@ private suspend fun recordVideo(
         lensFacing: Int,
         outputPath: String,
         awaitStop: suspend () -> Unit
-) {
-    //TODO("Try coroutines experimental dispatcher")
-    //TODO("Try main thread async dispatcher for default UI thread usage")
+) = coroutineScope {
     val camManager = cameraManager
     val camId: String = camManager.cameraIdList.firstOrNull {
         val characteristics = camManager.getCameraCharacteristics(it)
         characteristics[CameraCharacteristics.LENS_FACING] == lensFacing
     } ?: throw NoSuchElementException("No camera with requested facing ($lensFacing) found")
-    val recorderAsync = async(coroutineContext + CommonPool) {
+    val recorderAsync = async(coroutineContext + Dispatchers.Default) {
         val camCharacteristics = camManager.getCameraCharacteristics(camId)
-        val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+        val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]!!
         val videoSize = VideoRecorder.chooseVideoSize(configMap.outputSizes<MediaCodec>())
-        val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]
+        val sensorOrientation = camCharacteristics[CameraCharacteristics.SENSOR_ORIENTATION]!!
         MediaRecorder().apply {
             setupForVideoRecording(videoSize, sensorOrientation, outputPath)
         }

@@ -10,16 +10,15 @@ import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.CoroutineStart
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
-import kotlin.coroutines.experimental.coroutineContext
+import kotlinx.coroutines.experimental.coroutineScope
 
 @RequiresPermission(Manifest.permission.CAMERA)
 suspend fun <R> CameraManager.openAndUseCamera(
         cameraId: String,
         block: suspend (CameraDevice) -> R
-): R {
-    val context = coroutineContext
+): R = coroutineScope {
     val openedCamera = CompletableDeferred<CameraDevice>()
-    val completion: Deferred<R> = async(context, start = CoroutineStart.LAZY) {
+    val completion: Deferred<R> = async(start = CoroutineStart.LAZY) {
         openedCamera.await().use { camera ->
             block(camera)
         }
@@ -44,8 +43,8 @@ suspend fun <R> CameraManager.openAndUseCamera(
             closed.complete(Unit)
         }
     }
-    openCamera(cameraId, stateCallback, context.requireHandler())
-    return try {
+    openCamera(cameraId, stateCallback, coroutineContext.requireHandler())
+    try {
         completion.await()
     } finally {
         closed.await()

@@ -1,18 +1,18 @@
 package com.beepiz.cameracoroutines.sample
 
-import android.arch.lifecycle.Lifecycle.Event
+import android.arch.lifecycle.Lifecycle
 import android.hardware.camera2.CameraAccessException
 import android.os.Bundle
-import android.os.HandlerThread
 import android.support.v7.app.AppCompatActivity
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.exceptions.CamStateException
-import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
-import com.beepiz.cameracoroutines.sample.extensions.coroutines.createJob
+import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing.BACK
+import com.beepiz.cameracoroutines.sample.extensions.coroutines.awaitState
+import com.beepiz.cameracoroutines.sample.extensions.coroutines.coroutineScope
+import com.beepiz.cameracoroutines.sample.extensions.coroutines.createScope
 import com.beepiz.cameracoroutines.sample.extensions.media.recordVideo
-import com.beepiz.cameracoroutines.sample.extensions.useWithHandlerInContext
 import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.withContext
@@ -43,40 +43,46 @@ class ExtensionsApproachCamActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        val tillOnStop = lifecycle.createJob(Event.ON_STOP)
-        launch(UI, parent = tillOnStop) {
-            try {
-                HandlerThread("cam").useWithHandlerInContext {
-                    val externalFilesDir = getExternalFilesDir(null)?.absolutePath
-                            ?: throw IOException("External storage unavailable")
-                    val videoPath = "$externalFilesDir/ExtensionsApproachVideoRecord.mp4"
-                    recordVideo(CamCharacteristics.LensFacing.BACK, videoPath) {
-                        withContext(UI) {
-                            toast("Recording…")
-                            delay(6000)
-                            longToast("Recording succeeded!")
-                        }
+        lifecycle.coroutineScope.launch {
+            lifecycle.awaitState(Lifecycle.State.STARTED)
+            lifecycle.createScope(activeWhile = Lifecycle.State.STARTED).launch {
+                recordSampleVideo()
+            }
+        }
+    }
+
+    private suspend fun recordSampleVideo() {
+        try {
+            withCamContext {
+                val externalFilesDir = getExternalFilesDir(null)?.absolutePath
+                        ?: throw IOException("External storage unavailable")
+                val videoPath = "$externalFilesDir/ExtensionsApproachVideoRecord.mp4"
+                recordVideo(lensFacing = BACK, outputPath = videoPath) {
+                    withContext(Dispatchers.Main) {
+                        toast("Recording…")
+                        delay(6000)
+                        longToast("Recording succeeded!")
                     }
                 }
-            } catch (e: SecurityException) {
-                Timber.e(e)
-                longToast("Missing permission!")
-            } catch (e: Exception) {
-                Timber.e(e)
-                when (e) {
-                    is CameraAccessException -> longToast("Couldn't access the camera")
-                    is CamStateException -> {
-                        val state = e.nonOpenState
-                        longToast(when (state) {
-                            is CamDevice.State.Error -> state.errorString()
-                            CamDevice.State.Disconnected -> "Disconnected"
-                            CamDevice.State.Closed -> "Closed"
-                            CamDevice.State.Opened -> illegal()
-                        })
-                    }
-                    is CancellationException -> toast("Cancelled normally")
-                    else -> longToast("Unknown error (${e.message})")
+            }
+        } catch (e: SecurityException) {
+            Timber.e(e)
+            longToast("Missing permission!")
+        } catch (e: Exception) {
+            Timber.e(e)
+            when (e) {
+                is CameraAccessException -> longToast("Couldn't access the camera")
+                is CamStateException -> {
+                    val state = e.nonOpenState
+                    longToast(when (state) {
+                        is CamDevice.State.Error -> state.errorString()
+                        CamDevice.State.Disconnected -> "Disconnected"
+                        CamDevice.State.Closed -> "Closed"
+                        CamDevice.State.Opened -> illegal()
+                    })
                 }
+                is CancellationException -> toast("Cancelled normally")
+                else -> longToast("Unknown error (${e.message})")
             }
         }
     }

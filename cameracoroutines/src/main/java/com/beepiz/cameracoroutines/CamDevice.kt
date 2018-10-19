@@ -7,7 +7,7 @@ import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.view.Surface
 import com.beepiz.cameracoroutines.exceptions.CamStateException
-import kotlinx.coroutines.experimental.channels.ConflatedChannel
+import kotlinx.coroutines.experimental.channels.Channel
 import splitties.systemservices.cameraManager
 import timber.log.Timber
 
@@ -42,7 +42,7 @@ class CamDevice
 
     private val camManager = cameraManager
 
-    private val camState = ConflatedChannel<State>()
+    private val camState = Channel<State>(Channel.CONFLATED)
     private var cam: CameraDevice? = null
     private val camOrThrow: CameraDevice
         get() = cam ?: throw IllegalStateException("Camera not opened!")
