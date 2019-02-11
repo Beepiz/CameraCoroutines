@@ -11,33 +11,31 @@ import com.beepiz.cameracoroutines.sample.extensions.coroutines.awaitState
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.coroutineScope
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.createScope
 import com.beepiz.cameracoroutines.sample.extensions.media.recordVideo
-import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.*
 import splitties.exceptions.illegal
 import splitties.toast.longToast
 import splitties.toast.toast
-import splitties.viewdsl.appcompat.styles.progressBar
-import splitties.viewdsl.appcompat.textView
-import splitties.viewdsl.core.add
-import splitties.viewdsl.core.lParams
-import splitties.viewdsl.core.v
-import splitties.viewdsl.core.verticalLayout
+import splitties.views.dsl.core.add
+import splitties.views.dsl.core.lParams
+import splitties.views.dsl.core.styles.AndroidStyles
+import splitties.views.dsl.core.styles.invoke
+import splitties.views.dsl.core.textView
+import splitties.views.dsl.core.verticalLayout
 import splitties.views.gravityCenterHorizontal
 import timber.log.Timber
 import java.io.IOException
 
 class ExtensionsApproachCamActivity : AppCompatActivity() {
 
+    private val androidStyles = AndroidStyles
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(v(::verticalLayout) {
-            add(v(::textView) {
+        setContentView(verticalLayout {
+            add(textView {
                 text = "Extensions approach!"
             }, lParams(gravity = gravityCenterHorizontal))
-            add(v(::progressBar), lParams(gravity = gravityCenterHorizontal))
+            add(androidStyles.progressBar.default(context), lParams(gravity = gravityCenterHorizontal))
         })
     }
 

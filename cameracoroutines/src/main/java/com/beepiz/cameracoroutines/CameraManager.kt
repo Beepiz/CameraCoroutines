@@ -6,11 +6,11 @@ import android.hardware.camera2.CameraManager
 import android.support.annotation.RequiresPermission
 import com.beepiz.cameracoroutines.exceptions.CamStateException
 import com.beepiz.cameracoroutines.extensions.requireHandler
-import kotlinx.coroutines.experimental.CompletableDeferred
-import kotlinx.coroutines.experimental.CoroutineStart
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.coroutineScope
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 @RequiresPermission(Manifest.permission.CAMERA)
 suspend fun <R> CameraManager.openAndUseCamera(

@@ -16,22 +16,17 @@ import com.beepiz.cameracoroutines.CamCaptureSession
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
-import kotlinx.coroutines.experimental.CancellationException
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.android.asCoroutineDispatcher
-import kotlinx.coroutines.experimental.channels.consume
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
-import splitties.checkedlazy.uiLazy
+import kotlinx.coroutines.*
+import kotlinx.coroutines.android.asCoroutineDispatcher
+import kotlinx.coroutines.channels.consume
+import splitties.checkedlazy.mainThreadLazy
 import splitties.systemservices.cameraManager
-import splitties.viewdsl.core.setContentView
+import splitties.views.dsl.core.setContentView
 import timber.log.Timber
 
 class DoubleCamTestActivity : AppCompatActivity() {
 
-    private val ui: DoubleCamTestUi by uiLazy { DoubleCamTestUi(this) }
+    private val ui: DoubleCamTestUi by mainThreadLazy { DoubleCamTestUi(this) }
 
     private lateinit var frontJob: Job
     private lateinit var backJob: Job
@@ -66,7 +61,7 @@ class DoubleCamTestActivity : AppCompatActivity() {
     @RequiresPermission(Manifest.permission.CAMERA)
     private fun testFrontCam(): Job {
         val job = Job()
-        return launch(UI, parent = job) {
+        return GlobalScope.launch(Dispatchers.Main + job) {
             val camHandler = Handler(camThread.looper)
             val recorder = MediaRecorder()
             try {
@@ -128,7 +123,7 @@ class DoubleCamTestActivity : AppCompatActivity() {
     @RequiresPermission(Manifest.permission.CAMERA)
     private fun testBackCam(): Job {
         val job = Job()
-        return launch(UI, parent = job) {
+        return GlobalScope.launch(Dispatchers.Main + job) {
             val recorder = MediaRecorder()
             val camHandler = Handler(camThread.looper)
             try {

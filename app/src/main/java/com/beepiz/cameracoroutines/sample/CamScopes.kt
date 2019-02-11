@@ -3,9 +3,9 @@ package com.beepiz.cameracoroutines.sample
 import android.os.Handler
 import android.os.HandlerThread
 import com.beepiz.cameracoroutines.extensions.HandlerElement
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.android.HandlerContext
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.android.asCoroutineDispatcher
+import kotlinx.coroutines.withContext
 
 suspend fun withCamContext(block: suspend CoroutineScope.() -> Unit) {
     val handlerThread = HandlerThread("cam")
@@ -13,7 +13,7 @@ suspend fun withCamContext(block: suspend CoroutineScope.() -> Unit) {
         handlerThread.start()
         val handler = Handler(handlerThread.looper)
         @Suppress("DEPRECATION")
-        withContext(HandlerContext(handler) + HandlerElement(handler), block)
+        withContext(handler.asCoroutineDispatcher() + HandlerElement(handler), block)
     } finally {
         handlerThread.quitSafely()
     }

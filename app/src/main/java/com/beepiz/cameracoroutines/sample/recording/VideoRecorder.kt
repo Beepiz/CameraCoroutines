@@ -2,8 +2,8 @@ package com.beepiz.cameracoroutines.sample.recording
 
 import android.media.MediaRecorder
 import android.util.Size
-import kotlinx.coroutines.experimental.Job
-import splitties.uithread.isUiThread
+import kotlinx.coroutines.Job
+import splitties.mainthread.isMainThread
 
 object VideoRecorder {
 
@@ -20,7 +20,7 @@ object VideoRecorder {
     fun MediaRecorder.setupAndPrepare(parentJob: Job, size: Size, orientationInDegrees: Int, outputPath: String, withAudio: Boolean = true) {
         val w = size.width
         val h = size.height
-        check(!isUiThread)
+        check(!isMainThread)
         setOrientationHint(orientationInDegrees)
         setVideoSource(MediaRecorder.VideoSource.SURFACE)
         if (withAudio) setAudioSource(MediaRecorder.AudioSource.DEFAULT)

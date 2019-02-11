@@ -12,11 +12,11 @@ import com.beepiz.cameracoroutines.openAndUseCamera
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.coroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import splitties.mainthread.isMainThread
 import splitties.systemservices.cameraManager
-import splitties.uithread.isUiThread
 
 suspend fun recordVideo(
         lensFacing: LensFacing,
@@ -71,7 +71,7 @@ fun MediaRecorder.setupForVideoRecording(
         outputPath: String,
         withAudio: Boolean = true
 ) {
-    check(!isUiThread)
+    check(!isMainThread)
     val w = size.width
     val h = size.height
     setOrientationHint(orientationInDegrees)

@@ -7,7 +7,7 @@ import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.view.Surface
 import com.beepiz.cameracoroutines.exceptions.CamStateException
-import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.channels.Channel
 import splitties.systemservices.cameraManager
 import timber.log.Timber
 

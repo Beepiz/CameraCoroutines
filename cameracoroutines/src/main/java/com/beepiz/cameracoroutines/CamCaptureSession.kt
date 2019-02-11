@@ -25,9 +25,9 @@ import com.beepiz.cameracoroutines.CamDevice.Template.STILL_CAPTURE
 import com.beepiz.cameracoroutines.CamDevice.Template.VIDEO_SNAPSHOT
 import com.beepiz.cameracoroutines.CamDevice.Template.ZERO_SHUTTER_LAG
 import com.beepiz.cameracoroutines.exceptions.CamCaptureSessionStateException
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.experimental.channels.consume
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ConflatedBroadcastChannel
+import kotlinx.coroutines.channels.consume
 
 class CamCaptureSession internal constructor(
         private val cameraDevice: CameraDevice,

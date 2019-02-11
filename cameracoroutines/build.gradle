@@ -36,7 +36,7 @@ dependencies {
 
     // Splitties
     api "com.louiscad.splitties:splitties-appctx:$splitties_version"
-    api "com.louiscad.splitties:splitties-uithread:$splitties_version"
+    api "com.louiscad.splitties:splitties-mainthread:$splitties_version"
     api "com.louiscad.splitties:splitties-systemservices:$splitties_version"
 
     // Log utilities
@@ -44,8 +44,8 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
 
 kotlin {

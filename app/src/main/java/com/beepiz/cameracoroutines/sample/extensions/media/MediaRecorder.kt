@@ -2,9 +2,9 @@ package com.beepiz.cameracoroutines.sample.extensions.media
 
 import android.media.MediaRecorder
 import com.beepiz.cameracoroutines.sample.recording.MediaRecorderException
-import kotlinx.coroutines.experimental.CoroutineStart
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.coroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 suspend fun <R> MediaRecorder.use(
         @Suppress("REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE")

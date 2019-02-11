@@ -1,8 +1,8 @@
 package com.beepiz.cameracoroutines.sample.recording
 
 import android.view.SurfaceHolder
-import kotlinx.coroutines.experimental.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.experimental.channels.consumeEach
+import kotlinx.coroutines.channels.ConflatedBroadcastChannel
+import kotlinx.coroutines.channels.consumeEach
 
 class SurfaceHolderState(holder: SurfaceHolder) {
 

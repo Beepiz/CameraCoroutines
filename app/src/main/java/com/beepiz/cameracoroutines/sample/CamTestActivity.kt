@@ -11,11 +11,8 @@ import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.extensions.HandlerElement
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
 import com.beepiz.cameracoroutines.sample.extensions.media.recordVideo
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import splitties.viewdsl.core.setContentView
+import kotlinx.coroutines.*
+import splitties.views.dsl.core.setContentView
 import timber.log.Timber
 
 class CamTestActivity : AppCompatActivity() {
@@ -49,7 +46,7 @@ class CamTestActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     @RequiresPermission(Manifest.permission.CAMERA)
-    private fun testCamera() = launch(UI.immediate + HandlerElement(camThread)) {
+    private fun testCamera() = GlobalScope.launch(Dispatchers.Main.immediate + HandlerElement(camThread)) {
         try {
             val externalFilesDir = getExternalFilesDir(null).absolutePath
             val backVideoPath = "$externalFilesDir/BackRecorded.mp4"
