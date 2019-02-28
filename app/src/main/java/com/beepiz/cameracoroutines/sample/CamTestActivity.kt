@@ -5,8 +5,8 @@ import android.annotation.SuppressLint
 import android.hardware.camera2.CameraAccessException
 import android.os.Bundle
 import android.os.HandlerThread
-import android.support.annotation.RequiresPermission
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AppCompatActivity
 import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.extensions.HandlerElement
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics

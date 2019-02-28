@@ -5,7 +5,7 @@ import android.annotation.SuppressLint
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.view.Gravity
 import com.beepiz.cameracoroutines.sample.doublecam.DoubleCamTestActivity
 import splitties.activities.start

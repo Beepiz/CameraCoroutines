@@ -4,7 +4,7 @@ import android.Manifest
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraDevice.StateCallback
 import android.os.Handler
-import android.support.annotation.RequiresPermission
+import androidx.annotation.RequiresPermission
 import android.view.Surface
 import com.beepiz.cameracoroutines.exceptions.CamStateException
 import kotlinx.coroutines.ExperimentalCoroutinesApi

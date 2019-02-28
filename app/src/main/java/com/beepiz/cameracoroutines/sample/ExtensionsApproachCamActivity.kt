@@ -1,9 +1,9 @@
 package com.beepiz.cameracoroutines.sample
 
-import android.arch.lifecycle.Lifecycle
 import android.hardware.camera2.CameraAccessException
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.exceptions.CamStateException
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing.BACK
@@ -11,14 +11,16 @@ import com.beepiz.cameracoroutines.sample.extensions.coroutines.awaitState
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.coroutineScope
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.createScope
 import com.beepiz.cameracoroutines.sample.extensions.media.recordVideo
-import kotlinx.coroutines.*
-import splitties.exceptions.illegal
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import splitties.toast.longToast
 import splitties.toast.toast
 import splitties.views.dsl.core.add
 import splitties.views.dsl.core.lParams
 import splitties.views.dsl.core.styles.AndroidStyles
-import splitties.views.dsl.core.styles.invoke
 import splitties.views.dsl.core.textView
 import splitties.views.dsl.core.verticalLayout
 import splitties.views.gravityCenterHorizontal
@@ -27,7 +29,7 @@ import java.io.IOException
 
 class ExtensionsApproachCamActivity : AppCompatActivity() {
 
-    private val androidStyles = AndroidStyles
+    private val androidStyles = AndroidStyles(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +37,7 @@ class ExtensionsApproachCamActivity : AppCompatActivity() {
             add(textView {
                 text = "Extensions approach!"
             }, lParams(gravity = gravityCenterHorizontal))
-            add(androidStyles.progressBar.default(context), lParams(gravity = gravityCenterHorizontal))
+            add(androidStyles.progressBar.default(), lParams(gravity = gravityCenterHorizontal))
         })
     }
 
@@ -76,7 +78,7 @@ class ExtensionsApproachCamActivity : AppCompatActivity() {
                         is CamDevice.State.Error -> state.errorString()
                         CamDevice.State.Disconnected -> "Disconnected"
                         CamDevice.State.Closed -> "Closed"
-                        CamDevice.State.Opened -> illegal()
+                        CamDevice.State.Opened -> throw IllegalStateException()
                     })
                 }
                 is CancellationException -> toast("Cancelled normally")

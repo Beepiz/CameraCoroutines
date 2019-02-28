@@ -11,7 +11,7 @@ import android.hardware.camera2.CameraDevice.TEMPLATE_VIDEO_SNAPSHOT
 import android.hardware.camera2.CameraDevice.TEMPLATE_ZERO_SHUTTER_LAG
 import android.hardware.camera2.CaptureRequest
 import android.os.Handler
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import android.view.Surface
 import com.beepiz.cameracoroutines.CamDevice.Template.Manual
 import com.beepiz.cameracoroutines.CamDevice.Template.Preview

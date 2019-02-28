@@ -9,8 +9,8 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import android.support.annotation.RequiresPermission
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AppCompatActivity
 import android.view.SurfaceHolder
 import com.beepiz.cameracoroutines.CamCaptureSession
 import com.beepiz.cameracoroutines.CamDevice

@@ -3,7 +3,7 @@ package com.beepiz.cameracoroutines
 import android.Manifest
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
-import android.support.annotation.RequiresPermission
+import androidx.annotation.RequiresPermission
 import com.beepiz.cameracoroutines.exceptions.CamStateException
 import com.beepiz.cameracoroutines.extensions.requireHandler
 import kotlinx.coroutines.CompletableDeferred
