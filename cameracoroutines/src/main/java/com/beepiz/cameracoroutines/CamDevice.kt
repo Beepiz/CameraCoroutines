@@ -7,12 +7,13 @@ import android.os.Handler
 import android.support.annotation.RequiresPermission
 import android.view.Surface
 import com.beepiz.cameracoroutines.exceptions.CamStateException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import splitties.systemservices.cameraManager
 import timber.log.Timber
 
 class CamDevice
-@Deprecated("Use openAndUseCamera instead of instantiating this class.")
+@Deprecated("Use withOpenCamera instead of instantiating this class.")
 @RequiresPermission(Manifest.permission.CAMERA) constructor(
         private val camId: String,
         private val handler: Handler? = null) : AutoCloseable {
@@ -37,7 +38,7 @@ class CamDevice
     }
 
     enum class Template {
-        PREVIEW, STILL_CAPTURE, RECORD, VIDEO_SNAPSHOT, ZERO_SHUTTER_LAG, MANUAL
+        Preview, StillCapture, Record, VideoSnapshot, ZeroShutterLag, Manual
     }
 
     private val camManager = cameraManager
@@ -48,6 +49,7 @@ class CamDevice
         get() = cam ?: throw IllegalStateException("Camera not opened!")
     private var closed = false
 
+    @Deprecated("Use withOpenCamera instead of instantiating this class.")
     private val camStateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(camera: CameraDevice) {
             Timber.v("onOpened($camera)")
@@ -74,6 +76,7 @@ class CamDevice
         }
     }
 
+    @Deprecated("Use withOpenCamera instead of instantiating this class.")
     @RequiresPermission(Manifest.permission.CAMERA)
     suspend fun open() {
         camManager.openCamera(camId, camStateCallback, handler)
@@ -84,8 +87,12 @@ class CamDevice
         }
     }
 
-    fun createCaptureSession(outputs: List<Surface>) = CamCaptureSession(camOrThrow, handler).also {
-        camOrThrow.createCaptureSession(outputs, it.sessionStateCallback, handler)
+    @Deprecated("Use withOpenCamera instead of instantiating this class.")
+    @ExperimentalCoroutinesApi
+    fun createCaptureSession(outputs: List<Surface>): CamCaptureSession {
+        return CamCaptureSession(camOrThrow, handler).also {
+            camOrThrow.createCaptureSession(outputs, it.sessionStateCallback, handler)
+        }
     }
 
     override fun close() {

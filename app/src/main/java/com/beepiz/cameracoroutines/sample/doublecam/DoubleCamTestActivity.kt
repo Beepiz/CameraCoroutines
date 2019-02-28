@@ -16,9 +16,15 @@ import com.beepiz.cameracoroutines.CamCaptureSession
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.channels.consume
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import splitties.checkedlazy.mainThreadLazy
 import splitties.systemservices.cameraManager
 import splitties.views.dsl.core.setContentView
@@ -99,7 +105,7 @@ class DoubleCamTestActivity : AppCompatActivity() {
                         }
                     }
                 }
-                val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
+                val captureRequest = session.createCaptureRequest(CamDevice.Template.Record) {
                     surfaces.forEach(it::addTarget)
                     it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
                 }
@@ -161,7 +167,7 @@ class DoubleCamTestActivity : AppCompatActivity() {
                         }
                     }
                 }
-                val captureRequest = session.createCaptureRequest(CamDevice.Template.RECORD) {
+                val captureRequest = session.createCaptureRequest(CamDevice.Template.Record) {
                     surfaces.forEach(it::addTarget)
                     it[CaptureRequest.CONTROL_MODE] = CameraMetadata.CONTROL_MODE_AUTO
                 }
