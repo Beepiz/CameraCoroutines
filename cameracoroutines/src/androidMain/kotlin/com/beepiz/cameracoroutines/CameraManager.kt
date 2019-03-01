@@ -3,6 +3,7 @@ package com.beepiz.cameracoroutines
 import android.Manifest
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import com.beepiz.cameracoroutines.exceptions.CamStateException
 import com.beepiz.cameracoroutines.extensions.requireHandler
@@ -14,6 +15,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
+@RequiresApi(21)
 @Deprecated("Use withOpenCamera", ReplaceWith(
     "this.withOpenCamera(cameraId, block)",
     "com.beepiz.cameracoroutines.withOpenCamera"
@@ -57,6 +59,7 @@ suspend fun <R> CameraManager.openAndUseCamera(
     }
 }
 
+@RequiresApi(21)
 @RequiresPermission(Manifest.permission.CAMERA)
 suspend fun <R> CameraManager.withOpenCamera(
     cameraId: String,

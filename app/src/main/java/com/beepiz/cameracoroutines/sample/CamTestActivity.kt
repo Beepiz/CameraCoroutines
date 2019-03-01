@@ -5,16 +5,22 @@ import android.annotation.SuppressLint
 import android.hardware.camera2.CameraAccessException
 import android.os.Bundle
 import android.os.HandlerThread
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import com.beepiz.cameracoroutines.exceptions.CamException
 import com.beepiz.cameracoroutines.extensions.HandlerElement
 import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics
 import com.beepiz.cameracoroutines.sample.extensions.media.recordVideo
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import splitties.views.dsl.core.setContentView
 import timber.log.Timber
 
+@RequiresApi(21)
 class CamTestActivity : AppCompatActivity() {
 
     private lateinit var testJob: Job
@@ -51,10 +57,10 @@ class CamTestActivity : AppCompatActivity() {
             val externalFilesDir = getExternalFilesDir(null).absolutePath
             val backVideoPath = "$externalFilesDir/BackRecorded.mp4"
             val frontVideoPath = "$externalFilesDir/FrontRecorded.mp4"
-            recordVideo(CamCharacteristics.LensFacing.BACK, backVideoPath) {
+            recordVideo(CamCharacteristics.LensFacing.Back, backVideoPath) {
                 delay(10_000)
             }
-            recordVideo(CamCharacteristics.LensFacing.FRONT, frontVideoPath) {
+            recordVideo(CamCharacteristics.LensFacing.Front, frontVideoPath) {
                 delay(10_000)
             }
         } catch (e: CameraAccessException) {

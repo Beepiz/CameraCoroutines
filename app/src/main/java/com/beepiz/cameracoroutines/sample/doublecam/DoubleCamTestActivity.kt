@@ -9,17 +9,20 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.view.SurfaceHolder
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
-import android.view.SurfaceHolder
 import com.beepiz.cameracoroutines.CamCaptureSession
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.sample.extensions.outputSizes
 import com.beepiz.cameracoroutines.sample.recording.VideoRecorder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.channels.consume
 import kotlinx.coroutines.delay
@@ -30,6 +33,9 @@ import splitties.systemservices.cameraManager
 import splitties.views.dsl.core.setContentView
 import timber.log.Timber
 
+@ExperimentalCoroutinesApi
+@ObsoleteCoroutinesApi
+@RequiresApi(21)
 class DoubleCamTestActivity : AppCompatActivity() {
 
     private val ui: DoubleCamTestUi by mainThreadLazy { DoubleCamTestUi(this) }
@@ -77,7 +83,8 @@ class DoubleCamTestActivity : AppCompatActivity() {
                     characteristics[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_FRONT
                 } ?: throw NoSuchElementException("No back camera found")
                 val camCharacteristics = camManager.getCameraCharacteristics(backCamId)
-                val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+                val configMap =
+                    camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
                 val outputSizes = configMap.outputSizes<MediaRecorder>()
                 val previewSizes = configMap.outputSizes<SurfaceHolder>()
                 val videoSize = VideoRecorder.chooseVideoSize(outputSizes)
@@ -92,7 +99,13 @@ class DoubleCamTestActivity : AppCompatActivity() {
                     with(VideoRecorder) {
                         val externalFilesDir = getExternalFilesDir(null).absolutePath
                         val videoPath = "$externalFilesDir/CamCoroutinesFront.mp4"
-                        recorder.setupAndPrepare(job, videoSize, sensorOrientation, outputPath = videoPath, withAudio = false)
+                        recorder.setupAndPrepare(
+                            job,
+                            videoSize,
+                            sensorOrientation,
+                            outputPath = videoPath,
+                            withAudio = false
+                        )
                     }
                 }
                 val surfaces = listOf(recorder.surface, ui.previewSurface1)
@@ -139,7 +152,8 @@ class DoubleCamTestActivity : AppCompatActivity() {
                     characteristics[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_BACK
                 } ?: throw NoSuchElementException("No back camera found")
                 val camCharacteristics = camManager.getCameraCharacteristics(backCamId)
-                val configMap = camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+                val configMap =
+                    camCharacteristics[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
                 val outputSizes = configMap.outputSizes<MediaRecorder>()
                 val previewSizes = configMap.outputSizes<SurfaceHolder>()
                 val videoSize = VideoRecorder.chooseVideoSize(outputSizes)
@@ -154,7 +168,12 @@ class DoubleCamTestActivity : AppCompatActivity() {
                     with(VideoRecorder) {
                         val externalFilesDir = getExternalFilesDir(null).absolutePath
                         val videoPath = "$externalFilesDir/CamCoroutinesBack.mp4"
-                        recorder.setupAndPrepare(job, videoSize, sensorOrientation, outputPath = videoPath)
+                        recorder.setupAndPrepare(
+                            job,
+                            videoSize,
+                            sensorOrientation,
+                            outputPath = videoPath
+                        )
                     }
                 }
                 val surfaces = listOf(recorder.surface, ui.previewSurface2)

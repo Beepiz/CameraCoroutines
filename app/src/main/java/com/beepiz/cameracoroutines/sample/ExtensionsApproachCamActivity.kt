@@ -2,11 +2,12 @@ package com.beepiz.cameracoroutines.sample
 
 import android.hardware.camera2.CameraAccessException
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import com.beepiz.cameracoroutines.CamDevice
 import com.beepiz.cameracoroutines.exceptions.CamStateException
-import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing.BACK
+import com.beepiz.cameracoroutines.sample.extensions.CamCharacteristics.LensFacing.Back
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.awaitState
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.coroutineScope
 import com.beepiz.cameracoroutines.sample.extensions.coroutines.createScope
@@ -27,6 +28,7 @@ import splitties.views.gravityCenterHorizontal
 import timber.log.Timber
 import java.io.IOException
 
+@RequiresApi(21)
 class ExtensionsApproachCamActivity : AppCompatActivity() {
 
     private val androidStyles = AndroidStyles(this)
@@ -57,7 +59,7 @@ class ExtensionsApproachCamActivity : AppCompatActivity() {
                 val externalFilesDir = getExternalFilesDir(null)?.absolutePath
                         ?: throw IOException("External storage unavailable")
                 val videoPath = "$externalFilesDir/ExtensionsApproachVideoRecord.mp4"
-                recordVideo(lensFacing = BACK, outputPath = videoPath) {
+                recordVideo(lensFacing = Back, outputPath = videoPath) {
                     withContext(Dispatchers.Main) {
                         toast("Recording…")
                         delay(6000)
